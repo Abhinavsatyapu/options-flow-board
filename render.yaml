@@ -1,0 +1,32 @@
+# Reference Blueprint (the service was created via the Render API/MCP with the same settings).
+services:
+  - type: web
+    name: options-flow-board
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 app.py
+    healthCheckPath: /_alive
+    envVars:
+      - key: SPCX_VIEW_PASSWORD
+        sync: false
+      - key: SPCX_GUEST_PASSWORD
+        sync: false
+      - key: SPCX_PUSH_TOKEN
+        sync: false
+      - key: SPCX_SESSION_KEY
+        generateValue: true
+      - key: SPCX_KV_URL
+        fromService:
+          type: keyvalue
+          name: spcx-board-kv
+          property: connectionString
+      - key: SPCX_KEEPALIVE
+        value: session
+  - type: keyvalue
+    name: spcx-board-kv
+    plan: free
+    region: singapore
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

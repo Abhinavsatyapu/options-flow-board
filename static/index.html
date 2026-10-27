@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Options-Flow Engine</title><style>#ov tr.click{cursor:pointer}#ov tr.sel td{background:#22304a}#ov td.l{white-space:nowrap}</style>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#0f1218;--pn:#171b23;--bd:#2a303c;--tx:#e6e9ef;--mu:#8b93a3;--up:#2fbf71;--dn:#e5484d;--am:#f0a73a;--ac:#5b9cff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.4 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:10px 16px;border-bottom:1px solid var(--bd);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+h1{font-size:16px;margin:0}h2{font-size:13px;margin:0 0 8px;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.paper{background:var(--am);color:#000;font-weight:700;padding:2px 8px;border-radius:4px}
+main{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;padding:12px 16px}
+.pn{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:12px;min-width:0}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+@media(max-width:1100px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}}
+@media(max-width:600px){main{grid-template-columns:1fr;padding:8px;gap:8px}.pn{grid-column:1/-1!important;padding:10px}header{padding:8px}#assume{font-size:11px}.scroll{max-height:60vh;-webkit-overflow-scrolling:touch}th,td{padding:3px 4px;font-size:12px}input,select,textarea,button{font-size:16px}}
+body.view .ctl{display:none!important}.vo{display:none}body.view .vo{display:inline-block}
+.big{font-size:22px;font-weight:700}.mu{color:var(--mu)}.up{color:var(--up)}.dn{color:var(--dn)}.am{color:var(--am)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px}.kv div:nth-child(odd){color:var(--mu)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{padding:3px 6px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}
+th{color:var(--mu);font-weight:600;position:sticky;top:0;background:var(--pn)}td.l,th.l{text-align:left;white-space:normal}
+.scroll{max-height:420px;overflow:auto}
+.chk{display:grid;grid-template-columns:1fr auto auto;gap:4px 10px;align-items:center}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--dn);vertical-align:middle}.dot.on{background:var(--up)}.dot.na{background:var(--bd)}
+button,input,select,textarea{background:#0c0f14;color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--ac)}button.danger{border-color:var(--dn);color:var(--dn)}
+textarea{width:100%;font:12px ui-monospace,monospace}
+canvas{width:100%;display:block}
+.tag{padding:3px 10px;border-radius:12px;font-weight:700;display:inline-block}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+code{font:12px ui-monospace,monospace;background:#0c0f14;padding:1px 4px;border-radius:4px}
+.ev td{background:#1f2533}
+</style><style>
+#board{grid-column:1/-1;min-width:0}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.card{background:var(--pn);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;min-width:0;overflow-wrap:anywhere}
+.card.stale{opacity:.45}.card.act{border-color:var(--am);box-shadow:0 0 0 1px var(--am)}
+.ch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ch .tk{font-size:20px;font-weight:800}
+.bias{font-weight:800;font-size:14px;padding:3px 10px;border-radius:6px;letter-spacing:.03em}
+.b-BULLISH{background:var(--up);color:#000}.b-BEARISH{background:var(--dn);color:#fff}.b-NEUTRAL{background:#3a4150;color:#e6e9ef}
+.ln{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums}
+.dots{display:flex;flex-wrap:wrap;gap:3px 8px;margin-top:3px;font-size:12px}.dots span{white-space:nowrap}
+.d{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--dn);margin-right:3px;vertical-align:middle}.d.on{background:var(--up)}
+.pos{margin-top:6px;padding:6px 8px;border-radius:6px;background:#2a2110;border:1px solid var(--am);font-size:13px}
+.warn{color:var(--am);font-size:12px;margin-top:4px}
+.sig{border-bottom:1px solid var(--bd);padding:5px 0;font-size:13px;overflow-wrap:anywhere}.sig:last-child{border:0}
+.k-ENTRY{color:var(--am);font-weight:800}.k-EXIT{color:var(--ac);font-weight:800}.k-BLOCKED{color:var(--mu);font-weight:700}
+.near{background:#1d2a20;border:1px solid #2f5a3b;border-radius:8px;padding:6px 8px;margin:4px 0;font-size:13px}
+.near.s{background:#2a1d1e;border-color:#5a2f33}
+.tiny{font-size:11px;color:var(--mu)}
+@media(max-width:600px){.bgrid{grid-template-columns:1fr}.ch .tk{font-size:22px}#board h2{font-size:12px}}
+</style><style>
+.pgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:10px}
+.pgrid>.pn{background:#12161d}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.chip{flex:0 0 auto;border:1px solid var(--bd);border-radius:14px;padding:4px 10px;font-size:13px;background:#0c0f14;color:var(--tx);cursor:pointer}
+.chip.on{background:var(--ac);color:#000;border-color:var(--ac);font-weight:700}
+.tscroll{overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch;border:1px solid var(--bd);border-radius:6px}
+table.st th:first-child,table.st td:first-child{position:sticky;left:0;z-index:1;background:var(--pn);text-align:left}
+table.st th{z-index:2}table.st th:first-child{z-index:3}
+table.st tr.ev td{background:#1f2533}table.st tr.ev td:first-child{background:#1f2533}
+table.st tr.live td{color:var(--mu);font-style:italic}
+#lb tr{cursor:pointer}#lb tr.stale td{opacity:.45}
+.spark{display:block;width:100%;height:34px;margin-top:4px}
+@media(max-width:1100px){.pgrid>*{grid-column:span 12!important}}
+@media(max-width:600px){.pgrid{grid-template-columns:1fr}table.st th,table.st td{font-size:11.5px;padding:3px 5px}}
+</style><style>
+#hstrip{grid-column:1/-1;display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.hc{flex:0 0 auto;border-radius:12px;padding:2px 8px;font-size:11.5px;border:1px solid var(--bd);background:#12161d;cursor:pointer;white-space:nowrap}
+.hc.ok{border-color:#2f5a3b;background:#14251a}.hc.lag{border-color:#6b5320;background:#2a2312}.hc.bad{border-color:#6b2a2e;background:#2a1517}.hc.hist{border-color:var(--bd)}
+.pulse{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.pb{background:#12161d;border:1px solid var(--bd);border-radius:8px;padding:6px 8px}.pb .v{font-size:18px;font-weight:800}
+.reg{font-weight:800;padding:3px 10px;border-radius:6px;display:inline-block}.reg-RISK-ON{background:var(--up);color:#000}.reg-RISK-OFF{background:var(--dn);color:#fff}.reg-MIXED{background:#3a4150}
+.sbar{position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#e5484d 0%,#5a2326 35%,#2a303c 50%,#1d4a32 65%,#2fbf71 100%);margin:4px 0 2px}
+.sbar i{position:absolute;top:-3px;width:4px;height:16px;background:#fff;border-radius:2px;transform:translateX(-2px)}
+.bb{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:4px}.bb span{display:block}
+.sc{font-weight:800;font-variant-numeric:tabular-nums;padding:2px 7px;border-radius:6px;background:#2a303c}
+.sc.p{background:#1d4a32;color:#9df0c2}.sc.pp{background:var(--up);color:#000}.sc.n{background:#5a2326;color:#ffb3b5}.sc.nn{background:var(--dn);color:#fff}
+.star{margin-left:auto;background:none;border:1px solid var(--bd);border-radius:6px;font-size:18px;line-height:1;padding:2px 8px;color:var(--am)}
+.al{border-bottom:1px solid var(--bd);padding:5px 0;font-size:13px;overflow-wrap:anywhere;cursor:pointer}.al.new{background:#2a2312}
+.al .ty{font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:4px;margin-right:4px;text-transform:uppercase}
+.ty-divergence{background:#4a2a5a;color:#e5c3ff}.ty-unusual{background:#203a5a;color:#b8d8ff}.ty-score{background:#3a4150;color:#fff}.ty-signal{background:var(--am);color:#000}
+.card.flash{animation:fl 1s ease-in-out 6}@keyframes fl{50%{box-shadow:0 0 0 3px var(--am);background:#2a2312}}
+#toast{position:fixed;left:8px;right:8px;bottom:10px;z-index:50;background:#2a2312;border:1px solid var(--am);border-radius:10px;padding:10px 12px;font-size:14px;display:none;box-shadow:0 4px 20px #000a}
+.comp{display:grid;grid-template-columns:1fr auto;gap:0 8px;font-size:11.5px;margin-top:2px}
+.sub{margin-top:6px;padding-top:5px;border-top:1px dashed var(--bd)}
+.vw{margin-top:6px;padding:6px 8px;border-radius:8px;background:#12161d;border:1px solid var(--bd)}
+.vw .vv{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.vb{font-weight:800;font-size:12px;padding:2px 8px;border-radius:6px;display:inline-block;white-space:nowrap}
+.vc{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.vc span{font-size:11px;padding:1px 7px;border-radius:10px;white-space:nowrap;border:1px solid}
+.vc .ok{background:#14251a;border-color:#2f5a3b;color:#9df0c2}.vc .no{background:#2a1517;border-color:#6b2a2e;color:#ffb3b5}
+.ty-vwap{background:#0f4a4a;color:#a8fff4}
+.ty-confirmed{background:#1d4a32;color:#9df0c2}
+.bias.dim{opacity:.5;filter:saturate(.35)}
+.cf{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;font-size:12px}
+.cf .bias{font-size:12px;padding:2px 8px}
+#sbanner{grid-column:1/-1;display:none;background:#2a2312;border:1px solid #6b5320;color:#ffd98a;border-radius:8px;padding:5px 10px;font-size:12.5px}
+#mstrip{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#mstrip .mk{display:flex;align-items:center;gap:6px;background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:4px 10px;font-size:13px;white-space:nowrap}
+#mstrip .mk b.t{font-size:15px}
+@media(max-width:600px){#mstrip{gap:6px}#mstrip .mk{flex:1 1 140px;padding:4px 8px;font-size:12px}#sbanner{font-size:12px}.cf{font-size:11.5px}}
+/* polish: status line, info modal, IST times, card details, tooltips */
+.lv{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu);white-space:nowrap}.lv i{width:8px;height:8px;border-radius:50%;background:var(--up);display:inline-block}
+.lv.am{color:var(--am)}.lv.am i{background:var(--am)}.lv.rd{color:var(--dn)}.lv.rd i{background:var(--dn)}
+.ib{border-radius:50%;width:26px;height:26px;padding:0;line-height:24px;text-align:center;font-size:15px;color:var(--mu)}
+#info{position:fixed;inset:0;z-index:60;background:#000a;display:none;align-items:flex-start;justify-content:center;padding:40px 10px}#info.on{display:flex}
+#info .mbox{background:var(--pn);border:1px solid var(--bd);border-radius:10px;max-width:560px;width:100%;padding:14px 16px;font-size:13px;line-height:1.5;max-height:80vh;overflow:auto}
+#info h3{margin:0 0 8px;font-size:15px}#info .x{float:right}
+.ti{white-space:nowrap}.ti .et{color:var(--mu);font-size:.85em;font-weight:400}
+details.dt{margin-top:6px;border-top:1px solid var(--bd);padding-top:4px}details.dt>summary{cursor:pointer;font-size:12.5px;color:var(--mu);padding:4px 0;list-style-position:inside}
+details.dt[open]>summary{color:var(--tx)}
+.fl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px;font-variant-numeric:tabular-nums}.fl>div{background:#12161d;border:1px solid var(--bd);border-radius:6px;padding:3px 6px}.fl .tiny{display:block}.fl b{font-size:14px}
+#tip{position:fixed;z-index:70;max-width:280px;background:#22304a;border:1px solid var(--ac);border-radius:8px;padding:6px 9px;font-size:12.5px;display:none;box-shadow:0 4px 16px #000a}
+[data-tip]{cursor:help}
+</style></head><body><div id="toast"></div><div id="tip"></div>
+<div id="info" role="dialog" aria-modal="true" aria-label="Board info"><div class="mbox"><button class="x" id="infox" aria-label="Close">✕</button><h3>About this board</h3>
+<div id="assume" class="mu"></div><div style="margin-top:8px">Server time: <b id="clock">-</b></div><div class="tiny" id="infometa" style="margin-top:4px"></div>
+<div class="tiny" style="margin-top:8px">Times are shown in India time (IST) first, US Eastern (ET) second; the engine and stored data use ET. The IST/ET gap is computed from the time-zone database, so US clock changes are automatic.</div></div></div>
+<header><h1>Options-Flow Engine<span id="seltk" style="display:none">SPCX</span></h1><span class="paper" style="background:#0f3d24;color:#3ddc84;border-color:#1f7a47">LIVE DATA</span><span class="paper vo" style="background:#2a303c;color:#e6e9ef">VIEW-ONLY</span><a class="vo" href="/logout" style="color:#5b9cff">Log out</a>
+<span class="lv" id="live"><i></i><span id="livetx">Connecting…</span></span><button class="ib" id="infob" aria-label="Board info" title="Board info">ⓘ</button>
+<label class="mu">Day <select id="day"></select></label></header>
+<main>
+<div id="sbanner"></div>
+<div id="mstrip"></div>
+<div id="hstrip"></div>
+<section class="pn c12" id="pulsesec"><h2>Market pulse <span class="tiny" id="pmeta"></span></h2><div id="pulse" class="tiny">loading…</div></section>
+<section class="pn c12" id="lbsec"><h2>Flow leaderboard - <span id="lbsortlab">bullish to bearish by roll10 LEAN</span> (tap a row)</h2>
+ <div class="chips" id="lbsort"></div>
+ <div class="tscroll" style="max-height:42vh"><table id="lb" class="st"></table></div>
+ <div class="tiny" style="margin-top:4px">roll10 = sum of LEAN over the last 10 closed minutes. ΔCUM 10m / 30m = change of CUM_LEAN over 10 / 30 minutes. vs VWAP = last 1-min close vs session VWAP (Yahoo volume) + VWAP bias. Confirmed = |direction score| ≥ 60 held on the same side ≥ 5 min, SPY and QQQ on that side of VWAP, inside the confirmed window (a 30-60 min read); a faded pill = not confirmed (tap it for the reason). Greyed = stale.</div></section>
+<section class="pn c12" id="alsec"><h2>Alerts - divergence, unusual flow, direction extremes, VWAP, signals</h2>
+ <div class="row" style="margin:0 0 4px"><button id="snd">🔇 Enable sound</button><button id="aw">☆ Watched only</button><span class="tiny" id="wlist"></span></div>
+ <div class="chips" id="atype"></div><div id="alist" style="max-height:48vh;overflow-y:auto"></div>
+ <div class="tiny" style="margin-top:4px">Tap ☆ on a card to watch a ticker. New alerts on watched tickers flash the card, show a banner and (after "Enable sound") beep: high tone = bullish, low = bearish. Phones need one tap on the button before sound can play.</div></section>
+<section class="pn c12" id="whsec"><h2>🐳 Whale prints - newest first (single prints ≥ $250k)</h2>
+ <div class="chips" id="wchips"></div>
+ <div class="tscroll" style="max-height:40vh"><table id="wfeed" class="st"></table></div>
+ <div class="tiny" style="margin-top:4px">Green = bullish (calls bought / puts sold), red = bearish. Per-card whale bias and OFI+tape agreement each add ±0.5 to the bias score.</div></section>
+<section id="board"><div class="pn" style="margin-bottom:10px"><h2>Signal board <span class="tiny" id="bmeta"></span></h2>
+ <div id="near"></div>
+ <details open><summary class="mu" style="cursor:pointer">Signals today (newest first)</summary><div id="sigs" style="max-height:260px;overflow-y:auto"></div></details></div>
+ <div class="bgrid" id="cards"></div><div class="tiny" id="notfed" style="margin-top:6px"></div>
+ <div class="tiny" style="margin-top:4px">Bias = full or building scenario read when present, else score from CUM_LEAN side, 10-min CUM_LEAN slope, roll10 sign and price structure (≥3 one way; whale bias and OFI+tape agreement add ±0.5 each when that data is fed). VWAP box = session VWAP from Yahoo 1-min volume, price vs VWAP and the VWAP bias: BULLISH = all four checks bullish, BEARISH = all four bearish, NEUTRAL = building (small text shows e.g. "Bullish building 3/4") or no edge. Tap "Details" on a card for the rule checks, score breakdown and structure. Checks: Break+hold = price holding beyond a broken 5-min swing level; an entry fires only on the hold close with all 5 green and no stay-out. Signals are rule-based, not advice.</div></section>
+
+<section class="pn c12" id="flowsec"><h2>Per-minute flow log - <span id="mtk">SPCX</span> <span class="tiny" id="mmeta"></span></h2>
+ <div class="chips" id="chips"></div>
+ <div class="row"><label><input type="checkbox" id="evonly"> events only</label>
+ <label>scenario <select id="scenf"><option value="">all</option><option value="Downside">BEARISH</option><option value="Downside building">bearish building</option><option value="No clear direction">NEUTRAL</option><option value="Upside building">bullish building</option><option value="Upside">BULLISH</option></select></label>
+ <input id="q" placeholder="search action" size="12"> <span class="mu" id="dcount"></span></div>
+ <div class="tscroll" id="mwrap"><table id="mlog" class="st"></table></div>
+ <div class="tiny" style="margin-top:4px">C/P bot/sold = ATM call/put contracts bought/sold that minute; LEAN = NET C − NET P; Prem net = premium bought − sold; Δ sh = net delta shares; ΣΔ = running sum of Δ sh over today's stored closed minutes. L/S = long/short entry checks passing (of 5). VWAP / vs VWAP / VWAP scen. = session VWAP from Yahoo 1-min volume, last 1-min close vs VWAP, and the VWAP bias at that minute (BULLISH / BEARISH / NEUTRAL; the small text is the read on completed 5-min candles). • = 5-min bar close. "live" row = forming minute, not used for decisions.</div></section>
+<section class="pn c12" id="rules"><h2>Rules in force (A+ accuracy-first)</h2><div id="rulestxt" class="tiny" style="font-size:12.5px;line-height:1.5"></div>
+ <div id="dsrules" class="tiny" style="font-size:12.5px;line-height:1.5;margin-top:8px"></div></section>
+<section class="pn c4"><h2>Status - <span class="tkn"></span></h2>
+ <div id="scen">-</div>
+ <div class="kv" style="margin-top:8px" id="statuskv"></div></section>
+<section class="pn c4"><h2>Entry checks - <span class="tkn"></span>, this minute</h2><div class="chk" id="checks"></div>
+ <div class="mu" style="margin-top:6px">Entry fires only on the 5-min close that <b>holds</b> a break, with every check green and every stay-out clear.</div></section>
+<section class="pn c4"><h2><span class="tkn"></span> price (left) vs CUM_LEAN (right), times IST - swing levels, entries ▲▼ and exits ✕</h2><canvas id="chart" height="360"></canvas>
+ <div class="mu">Blue line = SPOT, amber = CUM_LEAN. Green dashes = confirmed swing highs, red dashes = swing lows (drawn from the minute they were confirmed).</div></section>
+<details class="pn c12" id="paper"><summary style="cursor:pointer;font-weight:700">Paper trading (virtual account, positions, equity, trade log, controls)</summary><div class="pgrid">
+<section class="pn c12"><h2>Overview - all tickers (tap a row for detail)</h2><div class="scroll" style="max-height:none"><table id="ov"></table></div><div class="mu" id="pfline" style="margin-top:6px"></div></section>
+<section class="pn c3"><h2>Portfolio account (virtual, shared)</h2><div class="big" id="eq">-</div><div class="kv" id="acct"></div></section>
+<section class="pn c3"><h2>Open position - <span class="tkn"></span></h2><div id="pos" class="kv"><div>-</div><div>flat</div></div></section>
+<section class="pn c4"><h2>Portfolio equity curve (mark-to-market)</h2><canvas id="eqc" height="200"></canvas><div class="kv" id="stats" style="margin-top:8px"></div></section>
+<section class="pn c12"><h2>Trade log - all tickers</h2><div class="scroll"><table id="trades"></table></div></section>
+<section class="pn c6 ctl"><h2>Ingest - paste TSV rows</h2>
+ <div class="row"><label>Ticker <input id="ptk" value="SPCX" size="6" autocapitalize="characters"></label><label>Date (ET) <input id="pdate" placeholder="YYYY-MM-DD (blank = today ET)" size="24"></label><button id="pbtn">Ingest pasted rows</button><span id="pmsg" class="mu"></span></div>
+ <textarea id="paste" rows="7" placeholder="Paste rows copied from the dashboard (with or without the header). Newest-first or oldest-first is fine; duplicates are ignored."></textarea>
+ <div class="mu" style="margin-top:6px">
+ Other ingest paths: <b>POST</b> <code>http://127.0.0.1:8765/ingest</code> (TSV body, or JSON <code>{"date":"YYYY-MM-DD","tsv":"..."}</code> / <code>{"rows":[...]}</code>);
+ <b>file watch</b> on <code id="wdir"></code> (*.tsv, date taken from file name like <code>2026-10-23.tsv</code>);
+ <b>browser bridge</b>: after signing in to the dashboard, paste <a href="/bridge.js" target="_blank">/bridge.js</a> into that tab's console;
+ <b>poller</b>: config <code>poll_url</code> (only for an endpoint that needs no login). <span id="ingstat"></span></div></section>
+<section class="pn c6 ctl"><h2>Replay / reset / config</h2>
+ <div class="row"><label>speed (rows/sec, 0 = instant) <input id="rspeed" value="20" size="4"></label><label>as ticker <input id="rtk" value="SPCX" size="6"></label><label>as date <input id="rdate" value="2026-10-22" size="11"></label>
+ <button id="rbtn">Replay yesterday.tsv (SPCX file)</button><button id="rstop">Stop replay</button><span id="rmsg" class="mu"></span></div>
+ <div class="row"><button class="danger" id="reset">Reset account (clear all rows and trades, back to starting equity)</button></div>
+ <details><summary>Config (every threshold) - saving re-runs all stored days</summary>
+ <textarea id="cfg" rows="14"></textarea><div class="row"><button id="csave">Save config</button><button id="cdef">Restore defaults</button><span id="cmsg" class="mu"></span></div></details>
+ <div class="mu" style="margin-top:8px">Educational paper simulation, not financial advice.</div></section>
+</div></details>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let S=null, ver=-1, selDay=null, selTk='SPCX';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const f2=x=>x==null?'-':Number(x).toFixed(2), money=x=>x==null?'-':(x<0?'-$':'$')+Math.abs(x).toLocaleString(undefined,{maximumFractionDigits:0});
+const n0=x=>x==null?'-':Math.round(x).toLocaleString(), cls=x=>x>0?'up':x<0?'dn':'';
+// ---- time helpers: data is ET 'HH:MM[:SS]'; display IST first, ET second (Intl tz database, no hardcoded offsets) ----
+const _fNY=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const _fIN=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hourCycle:'h23',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+function _nyParts(d){const o={};for(const p of _fNY.formatToParts(d))o[p.type]=p.value;return o}
+function etToday(){const o=_nyParts(new Date());return o.year+'-'+o.month+'-'+o.day}
+function _etMs(date,hms){const [y,m,d]=date.split('-').map(Number),[h,mi,se]=hms.split(':').map(Number),g=Date.UTC(y,m-1,d,h,mi,se||0),o=_nyParts(new Date(g));return g-(Date.UTC(+o.year,o.month-1,+o.day,+o.hour%24,+o.minute,+o.second)-g)}
+const _TC=new Map();
+function istOf(t,date){const m=/^(\d{1,2}:\d{2})(:\d{2})?/.exec(t||'');if(!m)return null;date=date||(typeof B!=='undefined'&&B&&B.date)||etToday();if(!/^\d{4}-\d{2}-\d{2}$/.test(date))date=etToday();const k=date+m[0];let v=_TC.get(k);
+ if(v===undefined){try{v=_fIN.format(new Date(_etMs(date,m[0]+(m[2]?'':':00'))));if(!m[2])v=v.slice(0,5)}catch(e){v=null}if(_TC.size>4000)_TC.clear();_TC.set(k,v)}return v}
+function T(t,date,br){const m=/^(\d{1,2}:\d{2}(:\d{2})?)/.exec(t||''),i=m&&istOf(m[1],date);if(!i)return esc(t||'-');return `<span class="ti">${i} IST${br?'<br>':''}<span class="et">${br?'':' · '}${m[1]} ET</span></span>`}
+function TR(a,b,date){const x=istOf(a,date),y=istOf(b,date);return x&&y?`${x}-${y} IST · ${a}-${b} ET`:`${a}-${b} ET`}
+function nowTxt(d){d=d||new Date();const o=_nyParts(d);return _fIN.format(d)+' IST · '+o.hour+':'+o.minute+':'+o.second+' ET'}
+function srvTime(s){const m=/(\d{4}-\d{2}-\d{2})?\s*(\d{2}:\d{2}:\d{2})/.exec(s||'');if(!m)return esc(s||'-');const d=m[1]||etToday(),i=istOf(m[2],d);return i?`${i} IST · ${m[2]} ET (${d})`:esc(s)}
+// server-provided text: map internal scenario words to BULLISH/BEARISH/NEUTRAL wording, and confirm-window times to IST first
+function lbl(x){return x.replace(/\b(Upside|Downside|upside|downside)\b/g,w=>({Upside:'Bullish',upside:'bullish',Downside:'Bearish',downside:'bearish'}[w])).replace(/\bWait\b/g,'Neutral').replace(/\bwait\b/g,'neutral').replace(/outside (\d{1,2}:\d{2})-(\d{1,2}:\d{2})/g,(_,a,b)=>'outside '+TR(a,b))}
+function scenPill(sc,small){sc=sc||'';const st=small?' style="font-size:11px;padding:1px 6px"':'';const d=/^Upside/.test(sc)?'BULLISH':/^Downside/.test(sc)?'BEARISH':'NEUTRAL',bld=/building/.test(sc);
+ return `<span class="bias b-${d}${bld?' dim':''}"${st}${bld?' title="building (2 of 3)"':''}>${d}</span>${bld?' <span class="tiny">building</span>':''}`}
+let _lastBoard=0;
+function liveTick(){const el=$('live');if(!el)return;if(!_lastBoard){$('livetx').textContent='Connecting…';return}const a=Math.max(0,Math.round((Date.now()-_lastBoard)/1000));
+ el.className='lv'+(a>120?' rd':a>30?' am':'');const ago=a<60?a+'s ago':Math.floor(a/60)+'m '+(a%60)+'s ago';
+ $('livetx').textContent=(a>120?'Reconnecting':B&&B.live_day===false?'Showing '+(B.date||'past day'):B&&!B.session_open?'Market closed':'Live')+' · updated '+ago}
+setInterval(liveTick,1000);
+function showTip(el){const tp=$('tip');tp.textContent=el.dataset.tip;tp.style.display='block';const r=el.getBoundingClientRect(),w=Math.min(280,innerWidth-16);tp.style.maxWidth=w+'px';
+ tp.style.left=Math.max(8,Math.min(r.left,innerWidth-tp.offsetWidth-8))+'px';tp.style.top=(r.bottom+6+tp.offsetHeight>innerHeight?r.top-tp.offsetHeight-6:r.bottom+6)+'px';clearTimeout(window.__tipT);window.__tipT=setTimeout(()=>tp.style.display='none',4500)}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-tip]');if(t){e.stopPropagation();e.preventDefault();showTip(t);return}$('tip').style.display='none'},true);
+// per-ticker open state for card <details data-dk>, kept across 2s refreshes and reloads
+const OPEN=new Set((()=>{try{return JSON.parse(localStorage.getItem('spcx_open')||'[]')}catch(e){return[]}})());
+document.addEventListener('toggle',e=>{const k=e.target&&e.target.dataset&&e.target.dataset.dk;if(!k)return;const had=OPEN.has(k);e.target.open?OPEN.add(k):OPEN.delete(k);if(had!==OPEN.has(k))try{localStorage.setItem('spcx_open',JSON.stringify([...OPEN]))}catch(_){} },true);
+let _lastOk=null;function connState(ok){let b=document.getElementById('connbar');if(!b){b=document.createElement('div');b.id='connbar';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#7a5a00;color:#fff;font:600 13px system-ui;padding:6px 10px;text-align:center;display:none';document.body.appendChild(b)}if(ok){_lastOk=new Date();b.style.display='none'}else{b.textContent='Connection blip - reconnecting automatically'+(_lastOk?' (data shown is from '+nowTxt(_lastOk)+')':'')+'. No need to refresh.';const alt=_altLink();if(alt){b.appendChild(document.createTextNode(' '+alt[0]+': '));const a=document.createElement('a');a.href=alt[1]+'/login';a.textContent=alt[1];a.style.color='#fff';b.appendChild(a)}b.style.display='block'}}
+// Backup public link: fetched from the view proxy's /api/links while connected and cached, so the banner can offer it during an outage.
+function _altLink(){let L={};try{L=JSON.parse(localStorage.getItem('spcx_links')||'{}')}catch(e){}const h=location.host;if(L.backup&&!L.backup.includes(h))return['Backup link',L.backup];if(L.primary&&!L.primary.includes(h))return['Main link',L.primary];return null}
+async function _loadLinks(){try{const r=await fetch('/api/links',{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&(j.backup||j.primary))localStorage.setItem('spcx_links',JSON.stringify(j))}}catch(e){}}_loadLinks();setInterval(_loadLinks,120000);
+async function api(p,o){try{const j=await api0(p,o);connState(true);return j}catch(e){if(!/view-only|signed out/.test(e.message))connState(false);throw e}}
+async function api0(p,o){const r=await fetch(p,o);if(r.status===403)throw new Error('view-only link: action disabled');if(r.status===401&&document.body.classList.contains('view')){location.href='/login';throw new Error('signed out')}const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
+const post=(p,b)=>api(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
+async function load(){if(!window.__vm){window.__vm=1;try{const r=await fetch('/healthz');if(r.headers.get('X-SPCX-View-Only')==='1'||new URLSearchParams(location.search).get('view')==='1')document.body.classList.add('view')}catch(e){}}const qs=new URLSearchParams();if(selDay)qs.set('date',selDay);if(selTk)qs.set('ticker',selTk);S=await api('/api/state?'+qs);ver=S.version;render()}
+async function tick(){try{const v=await api('/api/version');$('rmsg').textContent=v.replay.running?`replaying ${v.replay.pos}/${v.replay.total}`:(v.replay.total?`last replay ${v.replay.pos}/${v.replay.total}`:'');if(v.version!==ver)await load()}catch(e){$('clock').textContent='engine unreachable: '+e.message}}
+function render(){
+ const d=S.day, L=S.last, c=S.config; renderOv();
+ $('seltk').textContent=S.ticker; document.querySelectorAll('.tkn').forEach(e=>e.textContent=S.ticker);
+ $('clock').innerHTML=srvTime(S.server_time_et);
+ $('day').innerHTML=S.dates.map(x=>`<option ${x===S.date?'selected':''}>${x}</option>`).join('')||'<option>no data</option>';
+ $('assume').textContent=`Trades each underlying at the dashboard SPOT (minute close). Fills = SPOT ± $${c.slippage}/sh slippage, commission $${c.commission_per_share}/sh. One shared account. Risk ${c.risk_pct}% realised equity/trade, per-position cap ${c.max_notional_pct}%, gross cap ${c.max_gross_notional_pct}%, max ${c.max_open_positions} open. Stops/targets are checked on minute SPOT only (no intrabar highs/lows).`;
+ $('scen').innerHTML=L?scenPill(L.scenario):'<span class="mu">No data</span>';
+ $('statuskv').innerHTML=L?kv([['Date / time',S.date+' '+T(L.t,S.date)],['SPOT',f2(L.spot)],['LEAN',n0(L.lean)],['CUM_LEAN',n0(L.cum_lean)],['CUM_C',n0(L.cum_c)],['roll5 / roll10',n0(L.roll5)+' / '+n0(L.roll10)],['cumSlope10',n0(L.cum_slope10)],['callDrive10',n0(L.call_drive10)],['LEAN sign changes (10m)',L.sign_changes10],['Prior 30-min range',f2(L.range30_lo)+' - '+f2(L.range30_hi)],['Structure',L.struct_state+(L.struct_level?' @ '+f2(L.struct_level):'')],['Action',esc(L.action)],['Provisional (live) minute',(S.provisional_rows||[]).map(r=>T(r.TIME,S.date)+' @ '+f2(r.SPOT)).join(', ')||'none'],['Decisions use','closed minutes only']]):'';
+ $('eq').textContent=money(S.equity_now);
+ const op=S.open_position;
+ $('acct').innerHTML=kv([['Starting',money(c.starting_equity)],['Realised',money(S.equity_realised)],['Unrealised (all)',money(S.equity_now-S.equity_realised)],['Net P&L',`<span class="${cls(S.equity_now-c.starting_equity)}">${money(S.equity_now-c.starting_equity)}</span>`],['Open positions',S.open_positions.length+' / '+c.max_open_positions],['Gross notional',money(S.gross_notional)+' (cap '+c.max_gross_notional_pct+'%)'],['Per-position cap',c.max_notional_pct+'% of equity']]);
+ // checks
+ if(L){const names=[['time','Time window '+c.entry_start+'-'+c.entry_end],['structure','Break + hold (this 5-min close)'],['flow','Flow: roll5, roll10, ≥3 of 5'],['cum','CUM_LEAN slope10 + 30-min extreme'],['drive','callDrive10 (CUM_C)']];
+  const st=[['stay_chop','LEAN chop (≥'+c.chop_max_sign_changes+' sign flips/10m)'],['stay_range','Inside prior 30-min range'],['stay_losses',c.max_losing_trades_per_day+' losses today']];
+  let h='<div></div><div class="mu">LONG</div><div class="mu">SHORT</div>';
+  for(const [k,n] of names)h+=`<div>${n}</div><div>${dot(L.checks.long[k])}</div><div>${dot(L.checks.short[k])}</div>`;
+  h+=`<div>Structure state (holding)</div><div>${dot(L.checks.long.structure_state)}</div><div>${dot(L.checks.short.structure_state)}</div>`;
+  h+='<div class="mu" style="grid-column:1/4;margin-top:4px">Stay-out filters (green = clear)</div>';
+  for(const [k,n] of st)h+=`<div>${n}</div><div>${dot(!L.checks.long[k])}</div><div>${dot(!L.checks.short[k])}</div>`;
+  $('checks').innerHTML=h}
+ $('pos').innerHTML=op?kv([['Side',`<b class="${op.side==='long'?'up':'dn'}">${op.side.toUpperCase()}</b>`],['Entry',T(op.entry_t,S.date)+' @ '+f2(op.entry)],['Shares (open/total)',n0(op.shares_open)+' / '+n0(op.shares)],['Stop',f2(op.stop)+' (init '+f2(op.init_stop)+', '+op.stop_src+')'],['R / share',f2(op.R)],['T1',f2(op.t1)+(op.t1_done?' ✓ done':'')],['T2',f2(op.t2)+' ('+op.t2_src+')'],['Broken level',f2(op.broken_level)],['Last',f2(op.last_px)],['Unrealised',`<span class="${cls(op.unrealised)}">${money(op.unrealised)}</span>`]]):'<div>-</div><div>flat</div>';
+ const st=S.stats; $('stats').innerHTML=kv([['Trades',st.trades],['Win rate',st.win_rate==null?'-':st.win_rate+'%'],['Net closed P&L',money(st.net_pnl)],['Max drawdown',money(st.max_drawdown)+' ('+st.max_drawdown_pct.toFixed(2)+'%)']]);
+ $('trades').innerHTML='<tr><th class=l>Date</th><th class=l>Ticker</th><th class=l>Side</th><th>Entry</th><th>Entry</th><th>Shares</th><th>Stop</th><th>R</th><th>T1</th><th>T2</th><th class=l>Exits</th><th>Pts/sh</th><th>P&L $</th></tr>'+
+  (S.trades.slice().reverse().map(t=>`<tr><td class=l>${t.date}</td><td class=l><b>${t.ticker}</b>${t.legacy?'<br><span class=am style="font-size:11px">'+t.label+'</span>':''}</td><td class="l ${t.side==='long'?'up':'dn'}">${t.side}</td><td>${T(t.entry_t,t.date,1)}</td><td>${f2(t.entry)}</td><td>${n0(t.shares)}</td><td>${f2(t.init_stop)}</td><td>${f2(t.R)}</td><td>${f2(t.t1)}</td><td>${f2(t.t2)}</td><td class=l>${t.legs.map(l=>`${T(l.t,t.date)} ${n0(l.shares)}@${f2(l.price)} - ${l.reason}`).join('<br>')}</td><td class="${cls(t.pts)}">${f2(t.pts)}</td><td class="${cls(t.pnl)}">${money(t.pnl)}</td></tr>`).join('')||'<tr><td class=l colspan=13>No closed trades yet.</td></tr>');
+ renderDec(); drawChart(); drawEq(); renderRules(c);
+ if(document.activeElement!==$('cfg'))$('cfg').value=JSON.stringify(c,null,1);
+ $('wdir').textContent=S.watch.dir;
+ $('ingstat').textContent=(S.poll.error?' poller error: '+S.poll.error:'')+(S.watch.error?' watch error: '+S.watch.error:'');
+}
+function renderOv(){const ab={time:'T',structure:'S',flow:'F',cum:'C',drive:'D'},pc=p=>Object.keys(ab).map(k=>p.includes(k)?`<b class=up>${ab[k]}</b>`:`<span class=mu>${ab[k]}</span>`).join('');
+ $('ov').innerHTML='<tr><th class=l>Ticker</th><th>Time</th><th>Spot</th><th>CUM LEAN</th><th class=l>Scenario</th><th class=l>Long TSFCD</th><th class=l>Short TSFCD</th><th class=l>Stay-out</th><th class=l>Position</th><th>Today P&L</th><th>Trades (all)</th></tr>'+
+ S.overview.map(o=>{const pt=S.per_ticker[o.ticker]||{},ps=o.position;return `<tr class="click ${o.ticker===S.ticker?'sel':''}" data-tk="${o.ticker}"><td class=l><b>${o.ticker}</b>${o.provisional.length?' <span class=mu>(live '+o.provisional.join(',')+')</span>':''}</td><td>${o.t?T(o.t,S.date,1):'-'}</td><td>${f2(o.spot)}</td><td>${n0(o.cum_lean)}</td><td class=l>${o.has_data?scenPill(o.scenario,1):'<span class=mu>no data</span>'}</td><td class=l>${o.has_data?pc(o.long_pass):''}</td><td class=l>${o.has_data?pc(o.short_pass):''}</td><td class=l>${o.stay_out.map(x=>x.replace('stay_','')).join(', ')}</td><td class=l>${ps?`<b class="${ps.side==='long'?'up':'dn'}">${ps.side.toUpperCase()}</b> ${n0(ps.shares_open)} @ ${f2(ps.entry)} <span class="${cls(ps.unrealised)}">${money(ps.unrealised)}</span>`:'-'}</td><td class="${cls(o.today_pnl)}">${o.has_data?money(o.today_pnl):'-'}</td><td>${pt.trades||0}${pt.trades?' ('+pt.win_rate+'% win, '+money(pt.net_pnl)+')':''}</td></tr>`}).join('');
+ $('ov').querySelectorAll('tr.click').forEach(tr=>tr.onclick=()=>{selTk=tr.dataset.tk;load();window.scrollTo({top:document.getElementById('scen').getBoundingClientRect().top+scrollY-60,behavior:'smooth'})});
+ $('pfline').textContent=`T S F C D = time window, break+hold, flow, cum-lean, call drive (bold = passing now). Portfolio: ${S.stats.trades} trades, win rate ${S.stats.win_rate==null?'-':S.stats.win_rate+'%'}, closed P&L ${money(S.stats.net_pnl)}, max DD ${money(S.stats.max_drawdown)} (${S.stats.max_drawdown_pct.toFixed(2)}%). Day ${S.date||'-'}.`}
+const kv=a=>a.map(([k,v])=>`<div>${k}</div><div>${v}</div>`).join('');
+const dot=v=>`<span class="dot ${v===null||v===undefined?'na':v?'on':''}"></span>`;
+const yn=v=>v?'<span class=up>✓</span>':'<span class=dn>✗</span>';
+function renderRules(c){$('rulestxt').innerHTML=`<b>Entry</b> only on the 5-min close that holds a break of the latest swing, with all 5 checks (time ${TR(c.entry_start,c.last_entry_et,S.date)}, break+hold, flow, cum lean, call drive) and no stay-out (chop ≥${c.chop_max_sign_changes} flips, inside 30-min range, ${c.max_losing_trades_per_day} losses).
+ <b>A+ ${c.aplus_enabled?'ON':'OFF'}</b>: scenario must be a full BULLISH/BEARISH read${c.aplus_full_scenario?'':' (building ok)'}; net premium and net delta over ${c.aplus_window} min in trade direction; |roll10| ≥ ${c.roll10_pctile}th percentile of today (needs ${c.roll10_pctile_min_minutes} min); break ≥ ${c.min_break_pct}% beyond the level; max ${c.max_entries_per_ticker} entry/ticker/day, ${c.max_entries_day} entries/day.
+ <b>Live only</b>: ${c.require_live?'ON':'OFF'} - minute close ingested within ${c.live_lag_min} min (${c.live_lag_min_rotating} for rotating tickers; minutes stored by the multi.js feed always use ${c.live_lag_min}) and ≥${c.min_live_minutes} live minutes fed; backfilled signals are logged "SIGNAL (backfill, not traded)".
+ <b>Size</b> ${c.fixed_qty>0?'fixed '+c.fixed_qty+' sh':c.risk_pct+'% risk'}; book ${Math.round(c.t1_book_frac*100)}% at T1 (${c.t1_r}R) and move stop to entry; rest to T2 (${c.t2_r}R or next swing) / trail; SL ${c.stop_buffer} beyond swing, capped ${c.stop_cap_pct}%; exit on 5-min close back through the broken level; force-flat ${TR(c.force_flat,c.force_flat,S.date).replace(/(\S+)-\1/g,'$1')}. Paper only.
+ <br><b>VWAP bias</b> (display + direction score only, does not change entries): BULLISH = completed 5-min close above VWAP, pullback held above it, higher low / higher high, roll10 LEAN and 10-min CUM LEAN slope &gt; 0; BEARISH = mirror; NEUTRAL = only some of those (building n/4), ≥3 VWAP flips in 45 min, or flow contradicting price. Adds a weight-10 component to the direction score.`}
+let MD=null;
+const k0=x=>x==null?'-':Math.abs(x)>=1e6?(x/1e6).toFixed(2)+'M':Math.abs(x)>=1e3?(x/1e3).toFixed(Math.abs(x)>=1e5?0:1)+'k':String(Math.round(x));
+async function loadMinutes(){try{const tk=selTk||'SPCX';const m=await api('/api/minutes?ticker='+encodeURIComponent(tk));MD=m;renderDec()}catch(e){$('mmeta').textContent='error: '+e.message}}
+function renderChips(){if(!MD)return;const box=$('chips'),sl=box.scrollLeft;box.innerHTML=MD.tickers.map(t=>`<button class="chip ${t===MD.ticker?'on':''}" data-tk="${t}">${t}</button>`).join('');box.scrollLeft=sl;
+ box.querySelectorAll('.chip').forEach(b=>b.onclick=()=>pickTicker(b.dataset.tk,false));
+ if(window.__chipTk!==MD.ticker){window.__chipTk=MD.ticker;const on=box.querySelector('.chip.on');if(on)box.scrollLeft=Math.max(0,on.offsetLeft-box.offsetLeft-40)}}
+function logConf(c){if(!c)return '-';const d=c.side>0?'BULLISH':c.side<0?'BEARISH':null;
+ if(c.ok)return cpill({confirmed:1,dir:d},1)+` <span class="tiny">${c.score>0?'+':''}${c.score} · ${c.held}m</span>`;
+ if(d)return cpill({strong:1,dir:d,reason:c.reason||'not confirmed'},1);return `<span class="tiny mu">${c.score==null?'-':(c.score>0?'+':'')+c.score}</span>`}
+function renderDec(){if(!MD)return;renderChips();$('mtk').textContent=MD.ticker;let r=MD.rows;
+ if($('evonly').checked)r=r.filter(x=>x.event); if($('scenf').value)r=r.filter(x=>x.scenario===$('scenf').value);
+ const q=$('q').value.toLowerCase(); if(q)r=r.filter(x=>(x.action||'').toLowerCase().includes(q));
+ $('dcount').textContent=r.length+' rows'; $('mmeta').innerHTML=MD.date+' · '+(MD.rows[0]?'newest '+T(MD.rows[0].t,MD.date):'no rows');
+ const w=$('mwrap'),st=w.scrollTop,sl=w.scrollLeft;
+ $('mlog').innerHTML='<tr><th>Time</th><th>SPOT</th><th>VWAP</th><th>vs VWAP</th><th class=l>VWAP bias</th><th>C bot</th><th>C sold</th><th>NET C</th><th>P bot</th><th>P sold</th><th>NET P</th><th>LEAN</th><th>CUM C</th><th>CUM LEAN</th><th>r5</th><th>r10</th><th>ΔCUM10</th><th>Prem bot</th><th>Prem sold</th><th>Prem net</th><th>Δ sh</th><th>ΣΔ</th><th>flips</th><th>L/S</th><th class=l>Confirmed</th><th class=l>Scenario</th><th class=l>Action / reason</th></tr>'+
+ r.map(x=>`<tr class="${x.event?'ev':''} ${x.live?'live':''}"><td>${T(x.t,MD.date,1)}${x.live?' live':''}${x.bar_close?' •':''}</td><td>${f2(x.spot)}</td><td>${x.vwap==null?'-':f2(x.vwap)}</td><td class="${cls(x.vwap_pct)}">${x.vwap_pct==null?'-':pct(x.vwap_pct)}</td><td class=l title="${esc(x.vwap_why||'')}">${x.vwap_bias?vpill({bias:x.vwap_bias},1)+(/building/.test(x.vwap_scen||'')?' <span class=tiny>'+esc(x.vwap_scen)+'</span>':''):'-'}</td><td>${n0(x.c_bot)}</td><td>${n0(x.c_sold)}</td><td class="${cls(x.net_c)}">${n0(x.net_c)}</td><td>${n0(x.p_bot)}</td><td>${n0(x.p_sold)}</td><td class="${cls(-x.net_p)}">${n0(x.net_p)}</td><td class="${cls(x.lean)}"><b>${n0(x.lean)}</b></td><td class="${cls(x.cum_c)}">${n0(x.cum_c)}</td><td class="${cls(x.cum_lean)}">${n0(x.cum_lean)}</td><td class="${cls(x.roll5)}">${n0(x.roll5)}</td><td class="${cls(x.roll10)}">${n0(x.roll10)}</td><td class="${cls(x.slope10)}">${n0(x.slope10)}</td><td>${k0(x.prem_bot)}</td><td>${k0(x.prem_sold)}</td><td class="${cls(x.net_prem)}">${k0(x.net_prem)}</td><td class="${cls(x.delta_sh)}">${k0(x.delta_sh)}</td><td class="${cls(x.cum_delta)}">${k0(x.cum_delta)}</td><td>${x.flips??'-'}</td><td>${x.long_n==null?'-':x.long_n+'/'+x.short_n}</td><td class=l>${logConf(x.confirm)}</td><td class=l>${x.scenario?scenPill(x.scenario,1):''}</td><td class=l style="min-width:220px">${esc(x.action||'')}</td></tr>`).join('');
+ w.scrollTop=st;w.scrollLeft=sl}
+function pickTicker(tk,scroll){selTk=tk;MD&&(MD.ticker=tk);loadMinutes();load();if(scroll!==false)document.getElementById('flowsec').scrollIntoView({behavior:'smooth'})}
+
+function setup(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.height/ (cv._dpr||1);cv._dpr=dpr;cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';const g=cv.getContext('2d');g.scale(dpr,dpr);return [g,w,h]}
+function drawChart(){const cv=$('chart');const [g,W,H]=setup(cv);g.clearRect(0,0,W,H);const d=S.day;if(!d||!d.minutes.length)return;
+ const M=d.minutes,pl=50,pr=60,pt=10,pb=22,iw=W-pl-pr,ih=H-pt-pb,tm=t=>{const [a,b]=t.split(':');return a*60+ +b};
+ const t0=570,t1=960,x=t=>pl+(tm(t)-t0)/(t1-t0)*iw;
+ const ps=M.map(m=>m.spot),cs=M.map(m=>m.cum_lean);let pmin=Math.min(...ps),pmax=Math.max(...ps);const lv=[...d.swings_hi,...d.swings_lo].map(s=>s.level);pmin=Math.min(pmin,...lv);pmax=Math.max(pmax,...lv);const pp=(pmax-pmin)*.05||.5;pmin-=pp;pmax+=pp;
+ let cmin=Math.min(0,...cs),cmax=Math.max(0,...cs);const y=v=>pt+(pmax-v)/(pmax-pmin)*ih,yc=v=>pt+(cmax-v)/((cmax-cmin)||1)*ih;
+ g.font='11px system-ui';g.fillStyle=css('--mu');g.strokeStyle=css('--bd');g.lineWidth=1;
+ for(let i=0;i<=5;i++){const v=pmin+(pmax-pmin)*i/5;g.beginPath();g.moveTo(pl,y(v));g.lineTo(W-pr,y(v));g.stroke();g.fillText(v.toFixed(2),4,y(v)+4);const cv2=cmin+(cmax-cmin)*i/5;g.fillText(Math.round(cv2).toLocaleString(),W-pr+4,yc(cv2)+4)}
+ for(let h=10;h<=15;h++){const xx=x(h+':00');g.fillText(istOf(h+':00',S.date)||(h+':00'),xx-14,H-6)}g.fillText('IST',W-pr+4,H-6);
+ g.setLineDash([2,3]);g.strokeStyle=css('--mu');g.beginPath();g.moveTo(pl,yc(0));g.lineTo(W-pr,yc(0));g.stroke();
+ g.setLineDash([5,4]);for(const [arr,col] of [[d.swings_hi,'--up'],[d.swings_lo,'--dn']]){g.strokeStyle=css(col);for(const s of arr){g.beginPath();g.moveTo(x(s.confirmed),y(s.level));g.lineTo(W-pr,y(s.level));g.stroke()}}
+ g.setLineDash([]);
+ const line=(vals,fy,col,w)=>{g.strokeStyle=css(col);g.lineWidth=w;g.beginPath();M.forEach((m,i)=>{const X=x(m.t),Y=fy(vals[i]);i?g.lineTo(X,Y):g.moveTo(X,Y)});g.stroke()};
+ line(cs,yc,'--am',1.2);line(ps,y,'--ac',1.8);
+ for(const mk of d.markers){const X=x(mk.t),Y=y(mk.price);g.fillStyle=css(mk.type==='entry'?(mk.side==='long'?'--up':'--dn'):'--tx');g.font='bold 14px system-ui';
+  g.fillText(mk.type==='entry'?(mk.side==='long'?'▲':'▼'):'✕',X-5,Y+(mk.type==='entry'&&mk.side==='short'?-6:14))}
+}
+function drawEq(){const cv=$('eqc');const [g,W,H]=setup(cv);g.clearRect(0,0,W,H);const E=S.equity_curve;if(!E.length)return;const v=E.map(e=>e.equity);
+ let mn=Math.min(...v,S.config.starting_equity),mx=Math.max(...v,S.config.starting_equity);if(mx-mn<1){mx+=1000;mn-=1000}const pl=70,pt=8,ih=H-26,iw=W-pl-8;
+ const y=e=>pt+(mx-e)/(mx-mn)*ih;g.font='11px system-ui';g.fillStyle=css('--mu');g.strokeStyle=css('--bd');
+ for(let i=0;i<=4;i++){const e=mn+(mx-mn)*i/4;g.beginPath();g.moveTo(pl,y(e));g.lineTo(W-8,y(e));g.stroke();g.fillText('$'+(e/1e6).toFixed(3)+'M',2,y(e)+4)}
+ g.strokeStyle=css(v[v.length-1]>=S.config.starting_equity?'--up':'--dn');g.lineWidth=1.6;g.beginPath();v.forEach((e,i)=>{const X=pl+i/(Math.max(1,v.length-1))*iw;i?g.lineTo(X,y(e)):g.moveTo(X,y(e))});g.stroke();
+ const et=e=>e.date+' '+(istOf(e.t,e.date)||e.t)+' IST';g.fillText(et(E[0]),pl,H-4);const last=E[E.length-1];g.fillText(et(last),W-130,H-4)}
+$('day').onchange=e=>{selDay=e.target.value;BD=selDay;load();loadBoard()};
+$('snd').onclick=()=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume()}catch(e){}SOUND=!SOUND;$('snd').textContent=SOUND?'🔊 Sound on':'🔇 Enable sound';if(SOUND)beep('bullish')};
+$('aw').onclick=()=>{AW=!AW;renderAlerts()};
+['evonly','scenf'].forEach(i=>$(i).onchange=renderDec);$('q').oninput=renderDec;
+$('pbtn').onclick=async()=>{try{const r=await post('/api/paste',{tsv:$('paste').value,ticker:$('ptk').value||'SPCX',date:$('pdate').value||undefined});$('pmsg').textContent=`${r.ticker} ${r.date}: ${r.received} rows, ${r.new} new, ${r.updated} updated, ${r.unchanged_or_skipped} unchanged, ${r.provisional} provisional (live, not traded)`;$('paste').value=''}catch(e){$('pmsg').textContent='error: '+e.message}};
+$('rbtn').onclick=async()=>{try{const r=await post('/api/replay',{speed:+$('rspeed').value,date:$('rdate').value,ticker:$('rtk').value||'SPCX'});selDay=r.date;selTk=r.ticker;$('rmsg').textContent='replay started'}catch(e){$('rmsg').textContent='error: '+e.message}};
+$('rstop').onclick=()=>post('/api/replay/stop');
+$('reset').onclick=async()=>{if(confirm('Reset the virtual account? This deletes all stored rows and trades.')){await post('/api/reset',{clear_data:true});selDay=null;load()}};
+$('csave').onclick=async()=>{try{await post('/api/config',JSON.parse($('cfg').value));$('cmsg').textContent='saved, recomputed';load()}catch(e){$('cmsg').textContent='error: '+e.message}};
+$('cdef').onclick=async()=>{await post('/api/config/defaults');$('cmsg').textContent='defaults restored';load()};
+window.onresize=()=>{if(S){drawChart();drawEq()}};
+
+const esc=x=>lbl(String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])));
+const pct=x=>x==null?'-':(x>0?'+':'')+x.toFixed(2)+'%';
+function card(c){const P=c.position,arrow=c.cum_slope10>0?'▲':c.cum_slope10<0?'▼':'■',dots=r=>r.map(x=>`<span><i class="d ${x.ok?'on':''}"></i>${esc(x.label)}</span>`).join(''),D=B.date,dk='d:'+c.ticker;
+ const dup=c.health&&c.health.duplicate_of?`<div class="warn">⚠ identical data to ${c.health.duplicate_of.join(', ')} - one tab is mislabelled</div>`:'';
+ return `<div class="card ${c.stale?'stale':''} ${P||c.fired_now?'act':''}" data-tk="${c.ticker}">
+ <div class="ch"><span class="tk">${c.ticker}</span><span class="bias b-${c.bias}">${c.bias}</span>${c.dir?scb(c.dir.score):''}${heldTxt(c.confirm)}${c.feed==='multi'?'<span class="tiny up" style="border:1px solid var(--bd);border-radius:4px;padding:0 4px" title="fed every few seconds by multi.js">live</span>':c.rotating?'<span class="tiny" style="border:1px solid var(--bd);border-radius:4px;padding:0 4px" title="rotating feed, ~1-2 min delay">rotating</span>':''}<button class="star" data-star="${c.ticker}">${WATCH.has(c.ticker)?'★':'☆'}</button></div>
+ ${cfLine(c.confirm)}
+ <div class="ln"><span><b style="font-size:17px">${f2(c.spot)}</b> <span class="${cls(c.chg_pct)}" title="vs ${esc(c.open_t||'open')} ET">${pct(c.chg_pct)}</span></span><span class="tiny">${c.stale?'<b class=am>STALE</b> ':''}${T(c.t,D)}${c.age_min!=null?' · '+Math.max(0,c.age_min).toFixed(0)+'m ago':''}</span></div>
+ ${vwapBlock(c)}
+ <div class="fl"><div><span class="tiny">CUM LEAN</span><b class="${cls(c.cum_lean)}">${n0(c.cum_lean)}</b> <span class="tiny ${cls(c.cum_slope10)}" style="display:inline">${arrow}${n0(c.cum_slope10)}/10m</span></div><div><span class="tiny">roll10</span><b class="${cls(c.roll10)}">${n0(c.roll10)}</b></div><div><span class="tiny">Prem net</span><b class="${cls(c.net_prem)}">${k0(c.net_prem)}</b></div></div>
+ ${dup}
+ ${P?`<div class="pos"><b class="${P.side==='long'?'up':'dn'}">${P.side.toUpperCase()} OPEN</b> <span class="paper" style="font-size:10px;padding:1px 5px">PAPER</span> since ${T(P.entry_t,D)} @ <b>${f2(P.entry)}</b><br>SL <b>${f2(P.stop)}</b> · T1 ${f2(P.t1)}${P.t1_done?' (hit)':''} · T2 ${f2(P.t2)}<br>Size ${n0(P.shares_open)}/${n0(P.shares)} sh · Unrealised <b class="${cls(P.unrealised)}">${money(P.unrealised)}</b></div>`:''}
+ <details class="dt" data-dk="${dk}"${OPEN.has(dk)?' open':''}><summary>Details <span class="tiny">· Long ${c.long_n}/5 · Short ${c.short_n}/5${c.stay_out.length?' · <span class=am>stay out</span>':''}</span></summary>
+ <div style="margin-top:4px"><b class=up>Long ${c.long_n}/5</b><div class="dots">${dots(c.long)}</div></div>
+ <div style="margin-top:4px"><b class=dn>Short ${c.short_n}/5</b><div class="dots">${dots(c.short)}</div></div>
+ <div style="margin-top:4px" class="tiny"><b class=up>A+ long ${c.aplus_long_n}/4</b> <span class="dots" style="display:inline-flex">${dots(c.aplus_long)}</span></div>
+ <div class="tiny"><b class=dn>A+ short ${c.aplus_short_n}/4</b> <span class="dots" style="display:inline-flex">${dots(c.aplus_short)}</span></div>
+ <div class="ln tiny"><span>Prem 10m <b class="${cls(c.prem10)}">${k0(c.prem10)}</b> · Δ 10m <b class="${cls(c.delta10)}">${k0(c.delta10)}</b></span><span>|r10| 70th pct ${c.r10_thr==null?'n/a (<30m)':n0(c.r10_thr)}</span></div>
+ ${dirBlock(c)}
+ ${extrasLines(c)}
+ <div class="tiny">${c.live_now?'<span class=up>live feed</span>':'<span class=am>backfill/late</span>'}${c.lag_min!=null?' · lag '+c.lag_min.toFixed(1)+'m':''} · live minutes ${c.live_count??0}</div>
+ <div class="ln tiny" style="margin-top:4px"><span>Prem bot ${k0(c.prem_bot)} / sold ${k0(c.prem_sold)} · net <b class="${cls(c.net_prem)}">${k0(c.net_prem)}</b></span><span>Net Δ <b class="${cls(c.net_delta)}">${k0(c.net_delta)}</b> sh</span></div>
+ ${spark(c.spark)}<div class="ln tiny"><span>CUM LEAN last ${c.spark.length}m from ${T(c.spark_t0,D)}</span><span>ΔCUM 30m <b class="${cls(c.cum_chg30)}">${n0(c.cum_chg30)}</b></span></div>
+ <div class="ln tiny"><span>Last swing high <b>${c.last_swing_high?f2(c.last_swing_high.level)+'</b> ('+T(c.last_swing_high.t,D)+')':'-</b>'}</span><span>Last swing low <b>${c.last_swing_low?f2(c.last_swing_low.level)+'</b> ('+T(c.last_swing_low.t,D)+')':'-</b>'}</span></div>
+ <div class="ln tiny" style="margin-top:2px"><span>Nearest above <b>${f2(c.swing_high)}</b></span><span>Nearest below <b>${f2(c.swing_low)}</b></span><span>${c.struct!=='RANGE'?'Structure '+c.struct+' @ '+f2(c.struct_level):'Structure: range'}</span></div>
+ ${c.stay_out.length?`<div class="warn">Stay out: ${c.stay_out.map(esc).join('; ')}</div>`:''}
+ ${c.live_minute?`<div class="tiny">forming minute ${T(c.live_minute,D)} (not used)</div>`:''}</details></div>`}
+function heldTxt(cf){return cf&&cf.held>0?` <span class="tiny">held ${cf.held} min</span>`:''}
+function cpill(cf,small){if(!cf)return '';const st=small?' style="font-size:11px;padding:1px 6px"':'';
+ if(cf.confirmed)return `<span class="bias b-${cf.dir}"${st}>CONFIRMED ${cf.dir}</span>`;
+ if(cf.strong)return `<span class="bias b-${cf.dir} dim"${st} data-tip="${esc(cf.reason||'not confirmed')}" title="${esc(cf.reason||'')}">${cf.dir}</span>`;
+ return `<span class="bias b-NEUTRAL"${st}>NEUTRAL</span>`}
+function cfLine(cf){if(!cf)return '';
+ const why=cf.confirmed?`held ${cf.held} min${cf.market?' · '+esc(cf.market):''}`:cf.strong?`<span class="mu">${esc(cf.reason||'')}</span>`:'<span class="mu">no strong call (|score| &lt; 60)</span>';
+ return `<div class="cf"><span class="tiny">Confirmed</span>${cpill(cf)}<span class="tiny">${why}</span></div>`}
+function vpill(v,small){if(!v||!v.bias)return '';return `<span class="bias b-${v.bias}" style="${small?'font-size:11px;padding:1px 6px':'font-size:12px;padding:2px 8px'}">${v.bias}</span>`}
+function vwapBlock(c){const v=c.vwap;if(!v)return `<div class="vw"><b>VWAP</b> <span class="mu">n/a (no volume data)</span></div>`;
+ return `<div class="vw"><div class="ln" style="align-items:center"><span><b>VWAP</b> <span class="vv">${f2(v.vwap)}</span> <b class="vv ${cls(v.pct)}">${pct(v.pct)}</b></span>${vpill(v)}</div>
+ ${v.bias_note?`<div class="tiny" style="margin-top:2px">${esc(v.bias_note)}</div>`:''}
+ <div class="ln tiny"><span>±1σ ${f2(v.lower)} – ${f2(v.upper)}</span><span>px ${f2(v.px)} @ ${T(v.bar_t,B&&B.date)}</span></div>
+ ${v.mismatch_pct!=null?`<div class="warn">⚠ board SPOT ${f2(c.spot)} is ${v.mismatch_pct>0?'+':''}${v.mismatch_pct}% from the volume feed's price - feed may be mislabelled</div>`:''}
+ ${vspark(v.spark)}<div class="tiny">price (blue) vs VWAP (amber dashed) · last ${v.spark.px.length}m</div></div>`}
+function vspark(sp){if(!sp||!sp.px||sp.px.length<2)return '';const all=sp.px.concat(sp.vwap),mn=Math.min(...all),mx=Math.max(...all),W=300,H=40,sx=W/(sp.px.length-1),y=x=>H-2-(x-mn)/((mx-mn)||1)*(H-4);
+ const pl=a=>a.map((x,i)=>(i*sx).toFixed(1)+','+y(x).toFixed(1)).join(' ');
+ return `<svg class="spark" style="height:40px" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline fill="none" stroke="#f0a73a" stroke-width="1.6" stroke-dasharray="4 2" points="${pl(sp.vwap)}"/><polyline fill="none" stroke="#5b9cff" stroke-width="1.8" points="${pl(sp.px)}"/></svg>`}
+function scb(v){if(v==null)return '<span class="sc">-</span>';return `<span class="sc ${v>=50?'pp':v>=20?'p':v<=-50?'nn':v<=-20?'n':''}">${v>0?'+':''}${v}</span>`}
+function dirBlock(c){const d=c.dir;if(!d)return '';const m=d.momentum,st=d.structure,cp=Object.entries(d.components).sort((a,b)=>Math.abs(b[1].points)-Math.abs(a[1].points));
+ const sv=st.or30||st.or15,orl=sv?`OR${st.or30?30:15} ${f2(sv.lo)}-${f2(sv.hi)} <b class="${st.or_state==='above'?'up':st.or_state==='below'?'dn':''}">${st.or_state}</b>`:'OR n/a (before '+(istOf('09:45',B.date)||'')+' IST · 09:45 ET)';
+ const sk='s:'+c.ticker;
+ return `<div class="sub"><div class="ln"><span><b>Direction ${scb(d.score)}</b> <span class="tiny">${d.score_label}${c.confirm&&c.confirm.held>0?' · held '+c.confirm.held+' min':''} · 30-60 min read${d.score_10m_ago!=null?' · 10m ago '+(d.score_10m_ago>0?'+':'')+d.score_10m_ago:''}</span></span><span class="tiny">-100 … +100</span></div>
+ <div class="sbar"><i style="left:${(d.score+100)/2}%"></i></div>
+ <details data-dk="${sk}"${OPEN.has(sk)?' open':''}><summary class="tiny" style="cursor:pointer">score breakdown${d.missing.length?' · missing: '+d.missing.map(esc).join(', '):''}</summary><div class="comp">${cp.map(([k,v])=>`<span>${esc(v.label)} <span class="mu">(w${v.weight}, ${v.value>0?'+':''}${v.value})</span></span><b class="${cls(v.points)}">${v.points>0?'+':''}${v.points}</b>`).join('')}</div></details></div>
+ <div class="sub tiny"><div class="ln"><span>Momentum <b style="font-size:15px" class="${m.accel>0?'up':m.accel<0?'dn':''}">${m.arrow}</b> roll5 <b class="${cls(m.roll5)}">${n0(m.roll5)}</b> vs prev ${n0(m.roll5_prev)}</span><span>streak <b class="${cls(m.streak)}">${m.streak>0?'▲':m.streak<0?'▼':''}${Math.abs(m.streak)}m</b></span></div>
+ <div class="ln"><span>C/P bought 10m <b class="${m.cp_bought_ratio_10m>1?'up':m.cp_bought_ratio_10m<1?'dn':''}">${m.cp_bought_ratio_10m??'-'}</b> · day ${m.cp_bought_ratio_day??'-'}</span><span>$-wtd lean 10m <b class="${cls(m.prem_lean_10m)}">${k0(m.prem_lean_10m)}</b> · day ${k0(m.prem_lean_day)}</span></div></div>
+ <div class="sub tiny"><div class="ln"><span>${orl}</span><span>RS vs IWM <b class="${cls(st.rs_iwm)}">${st.rs_iwm==null?'-':(st.rs_iwm>0?'+':'')+st.rs_iwm+'%'}</b></span></div>
+ <div class="ln"><span>Day H <b>${f2(st.day_hi)}</b> ${T(st.day_hi_t,B.date)} · L <b>${f2(st.day_lo)}</b> ${T(st.day_lo_t,B.date)}</span><span>in range <b>${st.range_pos??'-'}%</b></span></div>
+ <div class="bb" title="position in day range"><span style="width:${st.range_pos??50}%;background:#3a4150"></span><span style="width:3px;background:#fff"></span><span style="flex:1;background:#232833"></span></div>
+ <div class="ln"><span>typical 5m move ${st.atr5_pct==null?'-':st.atr5_pct+'%'}</span><span>flow↔price corr 30m <b class="${cls(st.flow_price_corr30)}">${st.flow_price_corr30??'-'}</b></span></div></div>`}
+function extrasLines(c){const w=c.whale||{},o=c.ofi||{},hasO=o&&Object.keys(o).length;
+ const wl=w.n?`<div class="ln tiny" style="margin-top:4px"><span>🐳 ${w.n} whale prints · calls bot <b class=up>${k0(w.C_bot)}</b> / sold <b class=dn>${k0(w.C_sold)}</b> · puts bot <b class=dn>${k0(w.P_bot)}</b> / sold <b class=up>${k0(w.P_sold)}</b>${w.unknown?' · unclassified '+k0(w.unknown):''}</span><span>bias <b class="${cls(w.bias)}">${w.bias>0?'bull':w.bias<0?'bear':'flat'}</b></span></div>`:'<div class="tiny mu" style="margin-top:4px">🐳 no whale prints today</div>';
+ const ol=hasO?`<div class="ln tiny"><span>🌊 gamma <b class="${o.gamma_regime==='above flip'?'up':o.gamma_regime==='below flip'?'dn':''}">${o.gamma_regime||'n/a'}</b>${o.flip_dist!=null?' ('+o.flip_dist+')':''}${o.gex_score!=null?' · gex '+o.gex_score:''} · OFI <b class="${cls(o.ofi)}">${o.ofi==null?'-':k0(o.ofi)}</b> ${o.ofi_trend>0?'▲':o.ofi_trend<0?'▼':''}${o.wave!=null?' · wave '+o.wave:''}</span><span>tape <b class="${cls(o.tape)}">${o.tape==null?'-':k0(o.tape)}</b> sh${o.agree?' · <b class="'+cls(o.agree)+'">OFI+tape agree</b>':''}</span></div>`:'<div class="tiny mu">🌊 OFI panel not fed</div>';
+ return wl+ol}
+let WF='ALL';
+const QP=new URLSearchParams(location.search);let BD=QP.get('date')||null;
+let WATCH=new Set(JSON.parse(localStorage.getItem('spcx_watch')||'[]')),SOUND=false,AC=null,AF='all',AW=false,SEEN=null,FLASH={};
+function saveW(){localStorage.setItem('spcx_watch',JSON.stringify([...WATCH]))}
+function beep(side){if(!SOUND||!AC)return;try{const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=side==='bullish'?880:side==='bearish'?330:600;
+ g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.35,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.45);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.5)}catch(e){}}
+function allAlerts(){const a=(B.alerts||[]).slice();(B.signals||[]).filter(x=>x.kind!=='BLOCKED').forEach(x=>a.push({t:x.t,ticker:x.ticker,type:'signal',kind:x.kind,side:x.side==='long'?(x.kind==='ENTRY'?'bullish':'bearish'):(x.kind==='ENTRY'?'bearish':'bullish'),price:x.price,text:`${x.kind} ${(x.side||'').toUpperCase()} @ ${f2(x.price)}${x.pnl!=null?' · '+money(x.pnl):''}`}));
+ (B.near||[]).forEach(n=>a.push({t:n.t,ticker:n.ticker,type:'signal',kind:'near_'+n.side,side:n.side==='LONG'?'bullish':'bearish',price:n.spot,text:`Setup forming ${n.side} 4/5 - missing ${n.missing}`}));
+ return a.sort((x,y)=>x.t<y.t?1:x.t>y.t?-1:0)}
+const aid=a=>a.t+'|'+a.ticker+'|'+a.kind;
+function renderAlerts(){const A=allAlerts(),live=B.live_day&&B.session_open;
+ if(SEEN===null){SEEN=new Set(A.map(aid))}else{const fresh=A.filter(a=>!SEEN.has(aid(a)));fresh.forEach(a=>SEEN.add(aid(a)));
+  const w=fresh.filter(a=>WATCH.has(a.ticker));if(w.length&&live){w.forEach(a=>FLASH[a.ticker]=Date.now()+8000);const a=w[0];
+   const T=$('toast');T.innerHTML=`<b>${a.ticker}</b> <span class="${a.side==='bullish'?'up':a.side==='bearish'?'dn':''}">${esc(a.side)}</span> ${T(a.t)} - ${esc(a.text)}${w.length>1?' <span class="tiny">(+'+(w.length-1)+' more)</span>':''}`;T.style.display='block';T.onclick=()=>{T.style.display='none';pickTicker(a.ticker)};clearTimeout(window.__tt);window.__tt=setTimeout(()=>T.style.display='none',9000);beep(a.side)}
+  window.__fresh=new Set([...(window.__fresh||[]),...fresh.map(aid)])}
+ const types=[['all','All'],['divergence','Divergence'],['unusual','Unusual flow'],['score','Score'],['vwap','VWAP'],['confirmed','Confirmed'],['signal','Signals']];
+ $('atype').innerHTML=types.map(([k,l])=>`<button class="chip ${AF===k?'on':''}" data-a="${k}">${l} ${k==='all'?A.length:A.filter(a=>a.type===k).length}</button>`).join('');
+ $('atype').querySelectorAll('button').forEach(b=>b.onclick=()=>{AF=b.dataset.a;renderAlerts()});
+ $('aw').textContent=(AW?'★':'☆')+' Watched only';$('wlist').textContent=WATCH.size?'watching: '+[...WATCH].join(', '):'no tickers watched';
+ const v=A.filter(a=>(AF==='all'||a.type===AF)&&(!AW||WATCH.has(a.ticker))).slice(0,150);
+ $('alist').innerHTML=v.length?v.map(a=>`<div class="al ${(window.__fresh||new Set()).has(aid(a))?'new':''}" data-tk="${a.ticker}"><b>${T(a.t)}</b> <b>${a.ticker}</b>${WATCH.has(a.ticker)?'★':''} <span class="ty ty-${a.type}">${a.type==='unusual'?'z '+a.z:a.type}</span><span class="${a.side==='bullish'?'up':a.side==='bearish'?'dn':''}">${esc(a.side)}</span> @ ${f2(a.price)}<div class="tiny">${esc(a.text)}</div></div>`).join(''):'<div class="tiny">No alerts'+(AW?' on watched tickers':'')+' yet.</div>';
+ $('alist').querySelectorAll('.al').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk))}
+function renderPulse(){const P=B.pulse;if(!P){$('pulse').innerHTML='<div class="tiny">No fresh tickers.</div>';return}
+ const dup=t=>{const h=(B.health.tickers||[]).find(x=>x.ticker===t);return h&&h.duplicate_of?' ⚠':''};
+ const ldr=(x,lab)=>x?`<div class="pb" data-tk="${x.ticker}" style="cursor:pointer"><div class="tiny">${lab}</div><div class="v">${x.ticker}${dup(x.ticker)} ${scb(x.score)}</div><div class="tiny">${f2(x.spot)} <span class="${cls(x.chg_pct)}">${pct(x.chg_pct)}</span> · roll10 <span class="${cls(x.roll10)}">${n0(x.roll10)}</span></div><div class="tiny">vs VWAP <span class="${cls(x.vwap_pct)}">${x.vwap_pct==null?'n/a':pct(x.vwap_pct)}</span>${x.vwap_bias?` <span class="bias b-${x.vwap_bias}">${x.vwap_bias}</span>`:''}</div><div class="tiny" style="margin-top:3px">${x.confirmed?`<span class="bias b-${x.score>0?'BULLISH':'BEARISH'}" style="font-size:11px;padding:1px 6px">CONFIRMED ${x.score>0?'BULLISH':'BEARISH'}</span> held ${x.held} min`:`<span class="mu">${esc(x.note||'')}</span>`}</div></div>`:`<div class="pb"><div class="tiny">${lab}</div><div class="v">-</div><div class="tiny">none right now</div></div>`;
+ const L=P.leaders||{}; const ix=ldr(L.bull,'Top bullish now')+ldr(L.bear,'Top bearish now');
+ const chip=([t,s])=>`<button class="chip" data-tk="${t}">${t} ${s>0?'+':''}${s}</button>`;
+ $('pmeta').textContent=`${B.date} · ${P.n} tickers${B.session_open?'':' · market closed - showing last stored minute'}`;
+ $('pulse').innerHTML=`<div class="pulse"><div class="pb"><div class="tiny">Regime</div><div class="v"><span class="reg reg-${P.regime.split(' ')[0]}">${P.regime}</span></div><div class="tiny">avg direction ${scb(P.avg_score)}</div></div>
+ <div class="pb"><div class="tiny">Bull / neutral / bear (score ±20)</div><div class="v"><span class=up>${P.bull}</span> / ${P.neutral} / <span class=dn>${P.bear}</span></div><div class="bb"><span style="width:${P.bull/P.n*100}%;background:var(--up)"></span><span style="width:${P.neutral/P.n*100}%;background:#3a4150"></span><span style="flex:1;background:var(--dn)"></span></div></div>
+ <div class="pb"><div class="tiny">Breadth (roll10 > 0)</div><div class="v ${P.breadth_roll10_pos_pct>=55?'up':P.breadth_roll10_pos_pct<=45?'dn':''}">${P.breadth_roll10_pos_pct}%</div><div class="tiny">alerts last 15m: ${P.alerts_15m} · whale net ${k0(P.whale_net)}</div></div>
+ ${P.vwap_n!=null?`<div class="pb"><div class="tiny">Above / below VWAP</div><div class="v"><span class=up>${P.vwap_above}</span> / <span class=dn>${P.vwap_below}</span></div><div class="bb"><span style="width:${P.vwap_n?P.vwap_above/P.vwap_n*100:0}%;background:var(--up)"></span><span style="flex:1;background:var(--dn)"></span></div><div class="tiny">VWAP bullish ${P.vwap_up} · bearish ${P.vwap_down} · neutral ${P.vwap_wait}</div></div>`:''}<div class="pb"><div class="tiny">Confirmed calls now (30-60 min reads)</div><div class="v"><span class=up>${P.confirmed_bull??0}</span> / <span class=dn>${P.confirmed_bear??0}</span></div><div class="tiny">bullish / bearish · ${winTxt((B.confirm_rule||{}).window_et)}</div></div>${ix}</div>
+ <div class="row" style="margin-top:6px"><span class="tiny">Strongest</span>${P.top_bull.map(chip).join('')}</div><div class="row" style="margin:0"><span class="tiny">Weakest</span>${P.top_bear.map(chip).join('')}</div>`;
+ $('pulse').querySelectorAll('[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk))}
+function renderHealth(){const H=B.health;if(!H)return;const live=B.session_open;
+ const VF=H.vwap_feed||{},vfe=Object.keys(VF.failed||{});
+ const vfc=`<span class="hc ${VF.status==='error'?'bad':(vfe.length||(VF.no_bars||[]).length)?'lag':VF.status==='ok'?'ok':'hist'}" title="${esc((VF.note||'')+(vfe.length?' failed: '+vfe.map(k=>k+' '+VF.failed[k]).join('; '):''))}"><b>VWAP feed</b> ${esc(VF.status||'-')}${VF.last_poll?' · '+T(VF.last_poll):''}${VF.last_bar?' · bar '+T(VF.last_bar):''} · ${VF.with_bars??0}/${H.fed} with volume${vfe.length?' · ✗ '+vfe.join(','):''}${(VF.no_bars||[]).length?' · n/a '+VF.no_bars.join(','):''}</span>`;
+ $('hstrip').innerHTML=`<span class="hc ${H.stale?'bad':'ok'}"><b>Data</b> ${H.fed}/${H.configured.length} fed · ${H.stale} stale · ${live?'session open':'closed'}</span>`+vfc+(H.multi_feed&&H.multi_feed.tickers.length?`<span class="hc ok" title="${esc(H.multi_feed.tickers.join(' '))}"><b>multi feed</b> ${H.multi_feed.tickers.length} live${H.multi_feed.recompute&&H.multi_feed.recompute.last_ms!=null?' · engine '+H.multi_feed.recompute.last_ms+'ms':''}</span>`:'')+H.tickers.map(h=>{
+  const st=!live?'hist':h.stale?'bad':(!h.live||(h.lag_min||0)>2||h.duplicate_of||h.gaps>0)?'lag':'ok';
+  return `<span class="hc ${st}" data-tk="${h.ticker}"><b>${h.ticker}</b> ${T(h.t)}${live&&h.age_min!=null?' · '+Math.max(0,h.age_min).toFixed(0)+'m':''}${h.lag_min!=null?' · lag '+h.lag_min.toFixed(1):''}${h.feed==='multi'?' · live':h.rotating?' · rot':''}${h.gaps>0?' · '+h.gaps+' gap':''}${h.duplicate_of?' · ⚠dup '+h.duplicate_of.join('/'):''}${h.whale_prints?' · 🐳'+h.whale_prints:''}${h.ofi_snaps?' · 🌊':''}</span>`}).join('');
+ $('hstrip').querySelectorAll('[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk))}
+function renderDS(){const M=B.score_model;if(!M)return;const tot=Object.values(M.weights).reduce((a,b)=>a+b,0);
+ $('dsrules').innerHTML=`<b>Direction score (-100 … +100, display only - does not change entries).</b> Score = 100 × Σ(weight × component) / Σ(weights of components that have data). Each component is in -1…+1: flow components use tanh(value / (${M.scale_k} × this ticker's median size so far today)), so a typical move reads about ±0.46 and a ${M.scale_k}× bigger one ±0.76. Weights (total ${tot}): `+
+ Object.entries(M.weights).map(([k,w])=>`${esc(M.labels[k])} ${w}`).join(' · ')+`. Whale = tanh(net bullish whale premium / $1M); OFI+tape = (sign OFI + sign tape)/2; if whale/OFI data is missing those weights drop out. Labels: ≥+50 STRONG BULL, ≥+20 BULL, ±20 NEUTRAL, ≤-20 BEAR, ≤-50 STRONG BEAR.
+ <br><b>Alerts.</b> Divergence: price at a 30-min high (low) while roll10 and 10-min CUM LEAN slope are strongly bearish (bullish) (both components ≥0.6), or price up/down > max(0.5%, 3× typical 5-min move) over 30 min while CUM LEAN moves the other way by > 6× its median 10-min change; ${M.div_cooldown}-min cooldown per kind. Unusual flow: minute LEAN robust z ≥ ${M.z_alert} (median/MAD over the trailing ${M.z_window} min, needs ${M.z_min_hist}) AND the biggest |LEAN| of that hour AND contracts, premium or same-sign delta z ≥ ${M.z_confirm}; ${M.z_cooldown}-min cooldown. Score: |score| ≥ ${M.score_alert} for 3 straight minutes, re-armed after it returns inside ±${M.score_rearm}. VWAP: fires when a ticker's VWAP bias flips to BULLISH or BEARISH (30-min cooldown per ticker).
+ ${M.vwap_rule?'<br><b>VWAP.</b> '+esc(M.vwap_rule):''}`}
+function renderWhales(){if(!B)return;const ws=B.whales||[],tks=[...new Set(ws.map(x=>x.ticker))].sort();
+ $('wchips').innerHTML=['ALL',...tks].map(t=>`<button class="chip ${t===WF?'on':''}" data-w="${t}">${t}</button>`).join('');
+ $('wchips').querySelectorAll('button').forEach(b=>b.onclick=()=>{WF=b.dataset.w;renderWhales()});
+ const v=ws.filter(x=>WF==='ALL'||x.ticker===WF);
+ $('wfeed').innerHTML=v.length?'<tr><th class=l>Time</th><th class=l>Tkr</th><th>Strike</th><th>C/P</th><th>Side</th><th>Prem</th><th>Size</th><th class=l>OI / other</th></tr>'+v.map(x=>{const bull=(x.type==='C'&&x.side==='bot')||(x.type==='P'&&x.side==='sold'),bear=(x.type==='P'&&x.side==='bot')||(x.type==='C'&&x.side==='sold');
+  return `<tr><td class=l>${T(x.time,null,1)}</td><td class=l><b>${x.ticker}</b></td><td>${x.strike??'-'}</td><td>${x.type||'?'}</td><td class="${bull?'up':bear?'dn':''}">${esc(x.side||x.side_raw||'?')}</td><td><b>${k0(x.premium)}</b></td><td>${x.size==null?'-':n0(x.size)}</td><td class=l>${esc(x.oi||'')}${x.expiry?' · '+esc(x.expiry):''}</td></tr>`}).join(''):'<tr><td class="tiny l" style="white-space:normal">No whale prints received yet (needs the updated bridge.js / rotator.js in the tabs; the BIG PRINTS sub-table only lists prints ≥ $250k).</td></tr>'}
+function sigline(x){const tgt=x.kind==='ENTRY'?` · SL ${f2(x.sl)} · T1 ${f2(x.t1)} · T2 ${f2(x.t2)} · ${n0(x.shares)} sh`:x.kind==='EXIT'?` · ${n0(x.shares)} sh · <span class="${cls(x.pnl)}">${money(x.pnl)}</span>`:'';
+ const why=x.kind==='BLOCKED'?esc(x.reason.replace(/^.*REJECTED: /,'blocked by: ').replace(/^.*SKIPPED: /,'skipped: ').replace(/stay_chop/,'choppy LEAN').replace(/stay_range/,'inside 30-min range').replace(/stay_losses/,'2 losses today')):esc(x.reason.split(' (signal')[0]);
+ return `<div class="sig"><b>${T(x.t)}</b> <b>${x.ticker}</b> <span class="k-${x.kind}">${x.kind}</span> <span class="${x.side==='long'?'up':'dn'}">${(x.side||'').toUpperCase()}</span> @ ${f2(x.price)}${tgt}<div class="tiny">${why}</div></div>`}
+let B=null;
+function spark(v){if(!v||v.length<2)return '';const mn=Math.min(...v),mx=Math.max(...v),W=300,H=34,sx=W/(v.length-1),y=x=>H-2-(x-mn)/((mx-mn)||1)*(H-4);
+ const pts=v.map((x,i)=>(i*sx).toFixed(1)+','+y(x).toFixed(1)).join(' '),up=v[v.length-1]>=v[0];const z=mn<0&&mx>0?`<line x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}" stroke="#555" stroke-dasharray="3 3"/>`:'';
+ return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${z}<polyline fill="none" stroke="${up?'#2fbf71':'#e5484d'}" stroke-width="1.8" points="${pts}"/></svg>`}
+let LBS=localStorage.getItem('spcx_lbsort')||'roll10';
+const LBSORTS=[['roll10','roll10 LEAN','bullish to bearish by roll10 LEAN'],['confirmed','Confirmed','Confirmed calls first (bullish, then bearish)'],['score','Score','bullish to bearish by direction score']];
+function lbRows(){const L=B.leaderboard.slice(),sc=x=>x.score??0;
+ if(LBS==='score')L.sort((a,b)=>sc(b)-sc(a));
+ else if(LBS==='confirmed'){const g=x=>x.confirmed?(x.confirm_dir==='BULLISH'?0:1):x.strong?2:3;L.sort((a,b)=>g(a)-g(b)||(g(a)===1?sc(a)-sc(b):sc(b)-sc(a)))}
+ return L}
+function lbConf(x){if(x.confirmed)return cpill({confirmed:1,dir:x.confirm_dir},1);if(x.strong)return cpill({strong:1,dir:x.confirm_dir,reason:x.confirm_reason},1);return `<span class="bias b-NEUTRAL dim" style="font-size:11px;padding:1px 6px" data-tip="no strong call (|score| below 60)" title="no strong call">NEUTRAL</span>`}
+function renderLB(){if(!B)return;
+ $('lbsort').innerHTML=LBSORTS.map(([k,l])=>`<button class="chip ${LBS===k?'on':''}" data-s="${k}">${l}</button>`).join('');
+ $('lbsort').querySelectorAll('button').forEach(b=>b.onclick=()=>{LBS=b.dataset.s;localStorage.setItem('spcx_lbsort',LBS);renderLB()});
+ $('lbsortlab').textContent=(LBSORTS.find(x=>x[0]===LBS)||LBSORTS[0])[2];
+ $('lb').innerHTML='<tr><th>Ticker</th><th>Score</th><th class=l>Confirmed</th><th>vs VWAP</th><th>roll10</th><th>ΔCUM 10m</th><th>ΔCUM 30m</th><th>CUM LEAN</th><th>Spot %</th><th class=l>Bias</th><th>Time</th></tr>'+
+ lbRows().map(x=>`<tr class="${x.stale?'stale':''}" data-tk="${x.ticker}"><td><b>${x.ticker}</b>${WATCH.has(x.ticker)?' ★':''}</td><td>${scb(x.score)} ${x.arrow||''}${x.held>0?'<br><span class="tiny">held '+x.held+' min</span>':''}</td><td class=l>${lbConf(x)}</td><td class="${cls(x.vwap_pct)}"><b>${x.vwap_pct==null?'n/a':pct(x.vwap_pct)}</b>${x.vwap_bias?'<br>'+vpill({bias:x.vwap_bias},1):''}</td><td class="${cls(x.roll10)}"><b>${n0(x.roll10)}</b></td><td class="${cls(x.cum_slope10)}">${n0(x.cum_slope10)}</td><td class="${cls(x.cum_chg30)}">${n0(x.cum_chg30)}</td><td class="${cls(x.cum_lean)}">${n0(x.cum_lean)}</td><td class="${cls(x.chg_pct)}">${pct(x.chg_pct)}</td><td class=l><span class="bias b-${x.bias}" style="font-size:11px;padding:1px 6px">${x.bias}</span></td><td>${T(x.t,null,1)}</td></tr>`).join('');
+ $('lb').querySelectorAll('tr[data-tk]').forEach(tr=>tr.onclick=()=>pickTicker(tr.dataset.tk))}
+function renderMarket(){const M=B.market,S_=B.session||{};
+ const bn=$('sbanner');if(S_.banner){bn.innerHTML=banTxt(S_);bn.style.display='block'}else bn.style.display='none';
+ if(!M){$('mstrip').innerHTML='';return}
+ const one=tk=>{const x=M[tk];return `<span class="mk"><b class="t">${tk}</b>${x?`<span class="bias b-${x.bias}" style="font-size:12px;padding:2px 8px">${x.bias}</span><b class="${cls(x.pct)}">${pct(x.pct)}</b><span class="tiny">vs VWAP ${f2(x.vwap)} · ${T(x.bar_t)}</span>`:'<span class="mu">VWAP n/a</span>'}</span>`};
+ $('mstrip').innerHTML=one('SPY')+one('QQQ')+`<span class="mk"><span class="tiny">Market</span>${M.side==null?'<span class="mu">n/a - Confirmed blocked</span>':`<span class="bias b-${M.label}" style="font-size:12px;padding:2px 8px">${M.label}</span><span class="tiny">${M.side===0?'SPY/QQQ split':'both '+(M.side>0?'above':'below')+' VWAP'}</span>`}</span><span class="tiny mu">Confirmed window ${winTxt(S_.window_et)}</span>`}
+function winTxt(w){const m=/^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/.exec(w||'');return m?TR(m[1],m[2]):esc(w||'')}
+function banTxt(S_){const m=/^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/.exec(S_.window_et||'');if(!m)return esc(S_.banner);const a=m[1],b=m[2],one=t=>`${istOf(t)} IST · ${t} ET`;
+ if(S_.phase==='early')return `Early session (${TR('09:30',a)}) — calls less reliable. Confirmed calls and new entries start ${one(a)}.`;
+ if(S_.phase==='late')return `Late session (${TR(b,'16:00')}) — calls less reliable. No new Confirmed calls or entries after ${one(b)}.`;return esc(S_.banner)}
+let _lbBusy=false;async function loadBoard(){if(_lbBusy)return;_lbBusy=true;try{B=await api('/api/board'+(BD?'?date='+encodeURIComponent(BD):''));
+ _lastBoard=Date.now();liveTick();$('bmeta').textContent=`${B.date||''} · paper equity ${money(B.equity_now)} · ${B.open_positions} open`;
+ $('clock').innerHTML=srvTime(B.server_time_et);$('infometa').textContent=`Board day ${B.date||'-'} · auto-refresh 2s (minutes 4s) · ${B.cards.length} tickers`;
+ $('near').innerHTML=B.near.length?B.near.map(n=>`<div class="near ${n.side==='SHORT'?'s':''}"><b>Setup forming:</b> <b>${n.ticker}</b> <b class="${n.side==='LONG'?'up':'dn'}">${n.side}</b> 4/5 at ${T(n.t)} (${f2(n.spot)}) - missing <b>${esc(n.missing)}</b>${n.stay_out.length?'<div class="tiny">stay-out active: '+n.stay_out.map(esc).join('; ')+'</div>':''}</div>`).join(''):'<div class="tiny">No near-signals (4/5) on fresh tickers right now.</div>';
+ const sg=B.signals.filter(x=>x.kind!=='BLOCKED'),bl=B.signals.filter(x=>x.kind==='BLOCKED');
+ $('sigs').innerHTML=(sg.length?sg.map(sigline).join(''):'<div class="tiny">No entries or exits today yet.</div>')+(bl.length?'<div class="tiny" style="margin-top:6px">Blocked triggers (a break held, but a check or filter failed):</div>'+bl.slice(0,25).map(sigline).join(''):'');
+ renderCards();renderMarket();renderLB();renderWhales();renderPulse();renderHealth();renderAlerts();renderDS();
+  for(const [t,u] of Object.entries(FLASH)){if(u>Date.now()){const el=$('cards').querySelector(`.card[data-tk="${t}"]`);if(el)el.classList.add('flash')}}
+ $('notfed').textContent=B.not_fed.length?'Not fed today: '+B.not_fed.join(', '):'';
+}catch(e){$('bmeta').textContent='board error: '+e.message}finally{_lbBusy=false}}
+// keyed card updates: only cards whose HTML changed are replaced, so open Details and scroll stay put across refreshes
+function renderCards(){const box=$('cards');if(!B.cards.length){box.innerHTML='<div class="tiny">No tickers with data today.</div>';box._k=null;return}
+ if(!box._k){box.innerHTML='';box._k=new Map()}const K=box._k,seen=new Set();let prev=null;
+ for(const c of B.cards){const h=card(c);let el=K.get(c.ticker);
+  if(!el||el._h!==h){const tp=document.createElement('template');tp.innerHTML=h.trim();const n=tp.content.firstElementChild;n._h=h;if(el&&el.parentNode===box)el.replaceWith(n);el=n;K.set(c.ticker,n)}
+  const want=prev?prev.nextElementSibling:box.firstElementChild;if(want!==el)box.insertBefore(el,want);prev=el;seen.add(c.ticker)}
+ for(const [k,el] of K)if(!seen.has(k)){el.remove();K.delete(k)}}
+$('cards').addEventListener('click',e=>{const sb=e.target.closest('[data-star]');if(sb){e.stopPropagation();const t=sb.dataset.star;WATCH.has(t)?WATCH.delete(t):WATCH.add(t);saveW();loadBoard();return}
+ if(e.target.closest('details'))return;const cd=e.target.closest('.card');if(cd)pickTicker(cd.dataset.tk)});
+$('infob').onclick=()=>$('info').classList.add('on');$('infox').onclick=()=>$('info').classList.remove('on');
+$('info').addEventListener('click',e=>{if(e.target.id==='info')$('info').classList.remove('on')});document.addEventListener('keydown',e=>{if(e.key==='Escape')$('info').classList.remove('on')});
+{const sh=new URLSearchParams(location.search).get('shot'),hide=ids=>ids.forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none'});
+ if(sh==='flow')hide(['board','lbsec','whsec','pulsesec','alsec','hstrip']);
+ if(sh==='lb')hide(['board','whsec','pulsesec','alsec','hstrip','flowsec']);
+ if(sh==='alerts')hide(['board','lbsec','whsec','pulsesec','hstrip','flowsec']);
+ if(sh==='card'){hide(['lbsec','whsec','pulsesec','alsec','hstrip','flowsec']);document.head.insertAdjacentHTML('beforeend','<style>#board>.pn,#notfed,#board>.tiny{display:none}#cards>.card:not(:first-child){display:none}</style>')}}
+loadBoard();setInterval(loadBoard,2000);loadMinutes();setInterval(loadMinutes,4000);
+$('paper').addEventListener('toggle',()=>{if(S){drawChart();drawEq()}});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadBoard()});window.addEventListener("pageshow",()=>loadBoard());window.addEventListener("focus",()=>loadBoard());
+load();setInterval(tick,2500);
+</script></body></html>
