@@ -110,23 +110,41 @@ details.dt[open]>summary{color:var(--tx)}
 .fl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px;font-variant-numeric:tabular-nums}.fl>div{background:#12161d;border:1px solid var(--bd);border-radius:6px;padding:3px 6px}.fl .tiny{display:block}.fl b{font-size:14px}
 #tip{position:fixed;z-index:70;max-width:280px;background:#22304a;border:1px solid var(--ac);border-radius:8px;padding:6px 9px;font-size:12.5px;display:none;box-shadow:0 4px 16px #000a}
 [data-tip]{cursor:help}
+
+/* Wall & Floor signals */
+#wallsec .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+.wc{background:#12161d;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;min-width:0}
+.wc.stale{opacity:.4}
+.wc .ws{font-weight:800;font-size:11px;padding:2px 7px;border-radius:5px;letter-spacing:.02em;display:inline-block}
+.ws-BREAKOUT_UP_CONFIRMED,.ws-BOUNCED_OFF_FLOOR{background:var(--up);color:#000}
+.ws-BREAKDOWN_CONFIRMED,.ws-REJECTED_AT_CEILING{background:var(--dn);color:#fff}
+.ws-TESTING_CEILING,.ws-TESTING_FLOOR{background:var(--am);color:#000}
+.ws-IN_RANGE{background:#3a4150;color:#e6e9ef}
+.ws-WAITING{background:#2a303c;color:var(--mu)}
+.ty-wall{background:#1a3a4a;color:#7fd4ff}
+.ty-confirmed{background:#1d4a32;color:#9df0c2}
+.ty-vwap{background:#3a4150;color:#e6e9ef}
+@media(max-width:600px){#wallsec .wgrid{grid-template-columns:1fr}}
 </style></head><body><div id="toast"></div><div id="tip"></div>
 <div id="info" role="dialog" aria-modal="true" aria-label="Board info"><div class="mbox"><button class="x" id="infox" aria-label="Close">✕</button><h3>About this board</h3>
 <div id="assume" class="mu"></div><div style="margin-top:8px">Server time: <b id="clock">-</b></div><div class="tiny" id="infometa" style="margin-top:4px"></div>
 <div class="tiny" style="margin-top:8px">Times are shown in India time (IST) first, US Eastern (ET) second; the engine and stored data use ET. The IST/ET gap is computed from the time-zone database, so US clock changes are automatic.</div></div></div>
-<header><h1>Options-Flow Engine<span id="seltk" style="display:none">SPCX</span></h1><span class="paper" style="background:#0f3d24;color:#3ddc84;border-color:#1f7a47">LIVE DATA</span><span class="paper vo" style="background:#2a303c;color:#e6e9ef">VIEW-ONLY</span><a class="vo" href="/logout" style="color:#5b9cff">Log out</a>
+<header><h1>Options-Flow Engine<span id="seltk" style="display:none">SPCX</span></h1><span class="paper" style="background:#0f3d24;color:#3ddc84;border-color:#1f7a47">LIVE DATA</span><span class="paper" id="trademode" style="background:#1a2a3a;color:#7fd4ff;border-color:#2a5070">Trading on: …</span><span class="paper vo" style="background:#2a303c;color:#e6e9ef">VIEW-ONLY</span><a class="vo" href="/logout" style="color:#5b9cff">Log out</a>
 <span class="lv" id="live"><i></i><span id="livetx">Connecting…</span></span><button class="ib" id="infob" aria-label="Board info" title="Board info">ⓘ</button>
 <label class="mu">Day <select id="day"></select></label></header>
 <main>
 <div id="sbanner"></div>
 <div id="mstrip"></div>
 <div id="hstrip"></div>
+<section class="pn c12" id="wallsec"><h2>Wall &amp; Floor Signals <span class="tiny" id="wmeta"></span></h2>
+ <div id="wallgrid" class="wgrid"><div class="tiny">waiting for Wall Flow data…</div></div>
+ <div class="tiny" style="margin-top:4px">Live price vs dealer walls/shelves from the dashboard Wall Flow feed (~30s). <b>BREAKOUT/BREAKDOWN CONFIRMED</b> = held beyond the level ≥15 min with signed vol agreeing. <b>TESTING</b> = within 0.5%. Greyed = wallflow snapshot &gt;2 min stale. Paper entries use these states while <code>wall_signal_trading</code> is on (LONG = breakout up / strong bounce; SHORT = breakdown / strong reject). Old A+/structure path stays in code but does not open new trades.</div></section>
 <section class="pn c12" id="pulsesec"><h2>Market pulse <span class="tiny" id="pmeta"></span></h2><div id="pulse" class="tiny">loading…</div></section>
 <section class="pn c12" id="lbsec"><h2>Flow leaderboard - <span id="lbsortlab">bullish to bearish by roll10 LEAN</span> (tap a row)</h2>
  <div class="chips" id="lbsort"></div>
  <div class="tscroll" style="max-height:42vh"><table id="lb" class="st"></table></div>
- <div class="tiny" style="margin-top:4px">roll10 = sum of LEAN over the last 10 closed minutes. ΔCUM 10m / 30m = change of CUM_LEAN over 10 / 30 minutes. vs VWAP = last 1-min close vs session VWAP (Yahoo volume) + VWAP bias. Confirmed = |direction score| ≥ 60 held on the same side ≥ 5 min, SPY and QQQ on that side of VWAP, inside the confirmed window (a 30-60 min read); a faded pill = not confirmed (tap it for the reason). Greyed = stale.</div></section>
-<section class="pn c12" id="alsec"><h2>Alerts - divergence, unusual flow, direction extremes, VWAP, signals</h2>
+ <div class="tiny" style="margin-top:4px">roll10 = sum of LEAN over the last 10 closed minutes. ΔCUM 10m / 30m = change of CUM_LEAN over 10 / 30 minutes. vs VWAP = last 1-min close vs session VWAP (Yahoo volume) + VWAP bias. Confirmed = |direction score| ≥ 60 held on the same side ≥ 5 min, SPY and QQQ on that side of VWAP, inside the confirmed window (a 30-60 min read); a faded pill = not confirmed (tap it for the reason). Greyed = stale. Wall = Wall &amp; Floor signal state (see panel above).</div></section>
+<section class="pn c12" id="alsec"><h2>Alerts - divergence, unusual flow, direction extremes, VWAP, Wall, signals</h2>
  <div class="row" style="margin:0 0 4px"><button id="snd">🔇 Enable sound</button><button id="aw">☆ Watched only</button><span class="tiny" id="wlist"></span></div>
  <div class="chips" id="atype"></div><div id="alist" style="max-height:48vh;overflow-y:auto"></div>
  <div class="tiny" style="margin-top:4px">Tap ☆ on a card to watch a ticker. New alerts on watched tickers flash the card, show a banner and (after "Enable sound") beep: high tone = bullish, low = bearish. Phones need one tap on the button before sound can play.</div></section>
@@ -395,7 +413,7 @@ function renderAlerts(){const A=allAlerts(),live=B.live_day&&B.session_open;
   const w=fresh.filter(a=>WATCH.has(a.ticker));if(w.length&&live){w.forEach(a=>FLASH[a.ticker]=Date.now()+8000);const a=w[0];
    const T=$('toast');T.innerHTML=`<b>${a.ticker}</b> <span class="${a.side==='bullish'?'up':a.side==='bearish'?'dn':''}">${esc(a.side)}</span> ${T(a.t)} - ${esc(a.text)}${w.length>1?' <span class="tiny">(+'+(w.length-1)+' more)</span>':''}`;T.style.display='block';T.onclick=()=>{T.style.display='none';pickTicker(a.ticker)};clearTimeout(window.__tt);window.__tt=setTimeout(()=>T.style.display='none',9000);beep(a.side)}
   window.__fresh=new Set([...(window.__fresh||[]),...fresh.map(aid)])}
- const types=[['all','All'],['divergence','Divergence'],['unusual','Unusual flow'],['score','Score'],['vwap','VWAP'],['confirmed','Confirmed'],['signal','Signals']];
+ const types=[['all','All'],['divergence','Divergence'],['unusual','Unusual flow'],['score','Score'],['vwap','VWAP'],['wall','Wall'],['confirmed','Confirmed'],['signal','Signals']];
  $('atype').innerHTML=types.map(([k,l])=>`<button class="chip ${AF===k?'on':''}" data-a="${k}">${l} ${k==='all'?A.length:A.filter(a=>a.type===k).length}</button>`).join('');
  $('atype').querySelectorAll('button').forEach(b=>b.onclick=()=>{AF=b.dataset.a;renderAlerts()});
  $('aw').textContent=(AW?'★':'☆')+' Watched only';$('wlist').textContent=WATCH.size?'watching: '+[...WATCH].join(', '):'no tickers watched';
@@ -446,12 +464,37 @@ function lbRows(){const L=B.leaderboard.slice(),sc=x=>x.score??0;
  else if(LBS==='confirmed'){const g=x=>x.confirmed?(x.confirm_dir==='BULLISH'?0:1):x.strong?2:3;L.sort((a,b)=>g(a)-g(b)||(g(a)===1?sc(a)-sc(b):sc(b)-sc(a)))}
  return L}
 function lbConf(x){if(x.confirmed)return cpill({confirmed:1,dir:x.confirm_dir},1);if(x.strong)return cpill({strong:1,dir:x.confirm_dir,reason:x.confirm_reason},1);return `<span class="bias b-NEUTRAL dim" style="font-size:11px;padding:1px 6px" data-tip="no strong call (|score| below 60)" title="no strong call">NEUTRAL</span>`}
+
+function wallCls(st){return 'ws-'+(st||'WAITING').replace(/\s+/g,'_')}
+function wallPill(st,small){const s=st||'WAITING';return `<span class="ws ${wallCls(s)}" style="${small?'font-size:10px;padding:1px 5px':''}">${esc(s)}</span>`}
+function lbWall(x){if(!x.wall_state)return `<span class="tiny mu">—</span>`;return `${wallPill(x.wall_state,1)}${x.wall_strength!=null?`<div class="tiny ${x.wall_dir==='BULLISH'?'up':x.wall_dir==='BEARISH'?'dn':''}">${esc(x.wall_dir||'')} ${x.wall_strength}</div>`:''}`}
+function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
+ const W=B.wall_signals||[];
+ meta.textContent=W.length?`${W.filter(x=>x.has_data&&!x.stale).length}/${W.length} fresh · trading switch ${B.wall_signal_trading?'ON':'OFF'}`:'waiting for Wall Flow data';
+ if(!W.length){box.innerHTML='<div class="tiny">waiting for Wall Flow data… Re-run multi.js in the dashboard console after the engine update to start the ~30s Wall Flow feed.</div>';return}
+ box.innerHTML=W.map(w=>{
+  const stale=w.stale||!w.has_data;
+  const distC=w.dist_ceiling_pct==null?'':` (${pct(w.dist_ceiling_pct)})`;
+  const distF=w.dist_floor_pct==null?'':` (${pct(w.dist_floor_pct)})`;
+  const vote=(lab,v)=>`<span class="tiny">${lab} <b class="${v>0?'up':v<0?'dn':''}">${v>0?'▲':v<0?'▼':'·'}</b></span>`;
+  return `<div class="wc ${stale?'stale':''}" data-tk="${w.ticker}" style="cursor:pointer">
+   <div class="ch"><span class="tk" style="font-size:16px">${w.ticker}</span>${wallPill(w.state)}
+    <span class="bias b-${w.direction||'NEUTRAL'}" style="font-size:11px;padding:1px 6px">${w.direction||'NEUTRAL'} ${w.strength||0}</span>
+    <span class="tiny" style="margin-left:auto">${f2(w.spot)}</span></div>
+   <div class="ln tiny"><span>ceiling <b>${w.ceiling==null?'—':f2(w.ceiling)}</b>${distC}</span><span>floor <b>${w.floor==null?'—':f2(w.floor)}</b>${distF}</span></div>
+   <div class="ln tiny"><span>next ↑ <b class=up>${w.next_up==null?'—':f2(w.next_up)}</b></span><span>next ↓ <b class=dn>${w.next_dn==null?'—':f2(w.next_dn)}</b></span></div>
+   <div class="ln tiny"><span>${w.agree?`<b class="${w.agree==='AGREE'?'up':'am'}">${esc(w.agree)}</b>`:'<span class=mu>agree n/a</span>'} · ${vote('tape',w.tape_vote)} ${vote('opt',w.options_vote)} ${vote('dirs',w.dirs_vote)}</span>
+    <span class="tiny">${w.age_s!=null?Math.round(w.age_s)+'s ago':''}</span></div>
+   <div class="tiny" style="margin-top:3px">${esc(w.reason||'')}</div>
+  </div>`}).join('');
+ box.querySelectorAll('.wc[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
+}
 function renderLB(){if(!B)return;
  $('lbsort').innerHTML=LBSORTS.map(([k,l])=>`<button class="chip ${LBS===k?'on':''}" data-s="${k}">${l}</button>`).join('');
  $('lbsort').querySelectorAll('button').forEach(b=>b.onclick=()=>{LBS=b.dataset.s;localStorage.setItem('spcx_lbsort',LBS);renderLB()});
  $('lbsortlab').textContent=(LBSORTS.find(x=>x[0]===LBS)||LBSORTS[0])[2];
- $('lb').innerHTML='<tr><th>Ticker</th><th>Score</th><th class=l>Confirmed</th><th>vs VWAP</th><th>roll10</th><th>ΔCUM 10m</th><th>ΔCUM 30m</th><th>CUM LEAN</th><th>Spot %</th><th class=l>Bias</th><th>Time</th></tr>'+
- lbRows().map(x=>`<tr class="${x.stale?'stale':''}" data-tk="${x.ticker}"><td><b>${x.ticker}</b>${WATCH.has(x.ticker)?' ★':''}</td><td>${scb(x.score)} ${x.arrow||''}${x.held>0?'<br><span class="tiny">held '+x.held+' min</span>':''}</td><td class=l>${lbConf(x)}</td><td class="${cls(x.vwap_pct)}"><b>${x.vwap_pct==null?'n/a':pct(x.vwap_pct)}</b>${x.vwap_bias?'<br>'+vpill({bias:x.vwap_bias},1):''}</td><td class="${cls(x.roll10)}"><b>${n0(x.roll10)}</b></td><td class="${cls(x.cum_slope10)}">${n0(x.cum_slope10)}</td><td class="${cls(x.cum_chg30)}">${n0(x.cum_chg30)}</td><td class="${cls(x.cum_lean)}">${n0(x.cum_lean)}</td><td class="${cls(x.chg_pct)}">${pct(x.chg_pct)}</td><td class=l><span class="bias b-${x.bias}" style="font-size:11px;padding:1px 6px">${x.bias}</span></td><td>${T(x.t,null,1)}</td></tr>`).join('');
+ $('lb').innerHTML='<tr><th>Ticker</th><th>Score</th><th class=l>Confirmed</th><th class=l>Wall</th><th>vs VWAP</th><th>roll10</th><th>ΔCUM 10m</th><th>ΔCUM 30m</th><th>CUM LEAN</th><th>Spot %</th><th class=l>Bias</th><th>Time</th></tr>'+
+ lbRows().map(x=>`<tr class="${x.stale?'stale':''}" data-tk="${x.ticker}"><td><b>${x.ticker}</b>${WATCH.has(x.ticker)?' ★':''}</td><td>${scb(x.score)} ${x.arrow||''}${x.held>0?'<br><span class="tiny">held '+x.held+' min</span>':''}</td><td class=l>${lbConf(x)}</td><td class=l>${lbWall(x)}</td><td class="${cls(x.vwap_pct)}"><b>${x.vwap_pct==null?'n/a':pct(x.vwap_pct)}</b>${x.vwap_bias?'<br>'+vpill({bias:x.vwap_bias},1):''}</td><td class="${cls(x.roll10)}"><b>${n0(x.roll10)}</b></td><td class="${cls(x.cum_slope10)}">${n0(x.cum_slope10)}</td><td class="${cls(x.cum_chg30)}">${n0(x.cum_chg30)}</td><td class="${cls(x.cum_lean)}">${n0(x.cum_lean)}</td><td class="${cls(x.chg_pct)}">${pct(x.chg_pct)}</td><td class=l><span class="bias b-${x.bias}" style="font-size:11px;padding:1px 6px">${x.bias}</span></td><td>${T(x.t,null,1)}</td></tr>`).join('');
  $('lb').querySelectorAll('tr[data-tk]').forEach(tr=>tr.onclick=()=>pickTicker(tr.dataset.tk))}
 function renderMarket(){const M=B.market,S_=B.session||{};
  const bn=$('sbanner');if(S_.banner){bn.innerHTML=banTxt(S_);bn.style.display='block'}else bn.style.display='none';
@@ -463,12 +506,12 @@ function banTxt(S_){const m=/^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/.exec(S_.window_e
  if(S_.phase==='early')return `Early session (${TR('09:30',a)}) — calls less reliable. Confirmed calls and new entries start ${one(a)}.`;
  if(S_.phase==='late')return `Late session (${TR(b,'16:00')}) — calls less reliable. No new Confirmed calls or entries after ${one(b)}.`;return esc(S_.banner)}
 let _lbBusy=false;async function loadBoard(){if(_lbBusy)return;_lbBusy=true;try{B=await api('/api/board'+(BD?'?date='+encodeURIComponent(BD):''));
- _lastBoard=Date.now();liveTick();$('bmeta').textContent=`${B.date||''} · paper equity ${money(B.equity_now)} · ${B.open_positions} open`;
+ _lastBoard=Date.now();liveTick();const tm=$('trademode');if(tm)tm.textContent='Trading on: '+(B.trade_mode||(B.wall_signal_trading?'Wall & Floor':'A+/structure'));$('bmeta').textContent=`${B.date||''} · paper equity ${money(B.equity_now)} · ${B.open_positions} open`;
  $('clock').innerHTML=srvTime(B.server_time_et);$('infometa').textContent=`Board day ${B.date||'-'} · auto-refresh 2s (minutes 4s) · ${B.cards.length} tickers`;
  $('near').innerHTML=B.near.length?B.near.map(n=>`<div class="near ${n.side==='SHORT'?'s':''}"><b>Setup forming:</b> <b>${n.ticker}</b> <b class="${n.side==='LONG'?'up':'dn'}">${n.side}</b> 4/5 at ${T(n.t)} (${f2(n.spot)}) - missing <b>${esc(n.missing)}</b>${n.stay_out.length?'<div class="tiny">stay-out active: '+n.stay_out.map(esc).join('; ')+'</div>':''}</div>`).join(''):'<div class="tiny">No near-signals (4/5) on fresh tickers right now.</div>';
  const sg=B.signals.filter(x=>x.kind!=='BLOCKED'),bl=B.signals.filter(x=>x.kind==='BLOCKED');
  $('sigs').innerHTML=(sg.length?sg.map(sigline).join(''):'<div class="tiny">No entries or exits today yet.</div>')+(bl.length?'<div class="tiny" style="margin-top:6px">Blocked triggers (a break held, but a check or filter failed):</div>'+bl.slice(0,25).map(sigline).join(''):'');
- renderCards();renderMarket();renderLB();renderWhales();renderPulse();renderHealth();renderAlerts();renderDS();
+ renderCards();renderMarket();renderLB();renderWall();renderWhales();renderPulse();renderHealth();renderAlerts();renderDS();
   for(const [t,u] of Object.entries(FLASH)){if(u>Date.now()){const el=$('cards').querySelector(`.card[data-tk="${t}"]`);if(el)el.classList.add('flash')}}
  $('notfed').textContent=B.not_fed.length?'Not fed today: '+B.not_fed.join(', '):'';
 }catch(e){$('bmeta').textContent='board error: '+e.message}finally{_lbBusy=false}}
@@ -484,10 +527,10 @@ $('cards').addEventListener('click',e=>{const sb=e.target.closest('[data-star]')
 $('infob').onclick=()=>$('info').classList.add('on');$('infox').onclick=()=>$('info').classList.remove('on');
 $('info').addEventListener('click',e=>{if(e.target.id==='info')$('info').classList.remove('on')});document.addEventListener('keydown',e=>{if(e.key==='Escape')$('info').classList.remove('on')});
 {const sh=new URLSearchParams(location.search).get('shot'),hide=ids=>ids.forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none'});
- if(sh==='flow')hide(['board','lbsec','whsec','pulsesec','alsec','hstrip']);
- if(sh==='lb')hide(['board','whsec','pulsesec','alsec','hstrip','flowsec']);
- if(sh==='alerts')hide(['board','lbsec','whsec','pulsesec','hstrip','flowsec']);
- if(sh==='card'){hide(['lbsec','whsec','pulsesec','alsec','hstrip','flowsec']);document.head.insertAdjacentHTML('beforeend','<style>#board>.pn,#notfed,#board>.tiny{display:none}#cards>.card:not(:first-child){display:none}</style>')}}
+ if(sh==='flow')hide(['board','lbsec','whsec','pulsesec','alsec','hstrip','wallsec']);
+ if(sh==='lb')hide(['board','whsec','pulsesec','alsec','hstrip','flowsec','wallsec']);
+ if(sh==='alerts')hide(['board','lbsec','whsec','pulsesec','hstrip','flowsec','wallsec']);
+ if(sh==='card'){hide(['lbsec','whsec','pulsesec','alsec','hstrip','flowsec','wallsec']);document.head.insertAdjacentHTML('beforeend','<style>#board>.pn,#notfed,#board>.tiny{display:none}#cards>.card:not(:first-child){display:none}</style>')}}
 loadBoard();setInterval(loadBoard,2000);loadMinutes();setInterval(loadMinutes,4000);
 $('paper').addEventListener('toggle',()=>{if(S){drawChart();drawEq()}});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadBoard()});window.addEventListener("pageshow",()=>loadBoard());window.addEventListener("focus",()=>loadBoard());
 load();setInterval(tick,2500);
