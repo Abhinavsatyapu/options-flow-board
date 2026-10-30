@@ -536,7 +536,7 @@ let WALL_FLASH={};
 function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
  const W=B.wall_signals||[];
  const fresh=W.filter(x=>x.has_data&&!x.stale).length;
- meta.textContent=W.length?`${fresh}/${W.length} fresh · core≤${B.wall_stale_core_s||300}s / rest≤${B.wall_stale_rest_s||600}s · trading ${B.wall_signal_trading?'ON':'OFF'}`:'waiting for Wall Flow data';
+ meta.textContent=W.length?`${fresh}/${W.length} fresh · core≤${B.wall_stale_core_s||180}s / rest≤${B.wall_stale_rest_s||180}s · trading ${B.wall_signal_trading?'ON':'OFF'}`:'waiting for Wall Flow data';
  if(!W.length){box.innerHTML='<div class="tiny">waiting for Wall Flow data… Re-run multi.js in the dashboard console after the engine update to start the Wall Flow feed.</div>';return}
  // preserve scroll on iPad: remember first visible ticker
  const prevScroll=box.scrollTop||0;
@@ -554,7 +554,7 @@ function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
   const nd=w.next_dn==null?'—':(f2(w.next_dn)+(w.next_dn_est?' <span class=est title="estimated round strike">est</span>':''));
   const fl=WALL_FLASH[w.ticker]&&WALL_FLASH[w.ticker]>Date.now()?' flash':'';
   const pa=w.price_age_s, wa=w.walls_age_s!=null?w.walls_age_s:w.age_s;
-  const lim=w.stale_limit_s||(w.wall_core? (B.wall_stale_core_s||300):(B.wall_stale_rest_s||600));
+  const lim=w.stale_limit_s||(w.wall_core? (B.wall_stale_core_s||180):(B.wall_stale_rest_s||180));
   return `<div class="wc ${stale?'stale':''}${fl}" data-tk="${w.ticker}" style="cursor:pointer">
    <div class="ch"><span class="tk" style="font-size:16px">${w.ticker}</span>${wallPill(w.state)}
     <span class="bias b-${w.direction||'NEUTRAL'}" style="font-size:11px;padding:1px 6px">${w.direction||'NEUTRAL'} ${w.strength||0}</span>
