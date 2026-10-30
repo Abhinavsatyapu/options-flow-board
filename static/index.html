@@ -1,5 +1,13 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Options-Flow Engine</title><style>#ov tr.click{cursor:pointer}#ov tr.sel td{background:#22304a}#ov td.l{white-space:nowrap}</style>
+<html lang="en"><head><meta charset="utf-8"><title>Options-Flow Engine</title><style>#ov tr.click{cursor:pointer}#ov tr.sel td{background:#22304a}#ov td.l{white-space:nowrap}
+#liveclock{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--mu);margin-left:8px}
+#liveclock.stale{color:#fff;background:#a33;padding:2px 8px;border-radius:6px;font-weight:700}
+#readysec{position:sticky;top:0;z-index:40;background:var(--bg,#0e1117);padding-bottom:6px;box-shadow:0 6px 16px #0008}
+.wc.flash{outline:2px solid var(--ac,#5b9cff);box-shadow:0 0 0 3px #5b9cff55}
+.age{font-variant-numeric:tabular-nums}
+.age.g{color:var(--up,#2fbf71)}.age.a{color:var(--am,#e6a23c)}.age.r{color:var(--dn,#e5484d)}
+.wc .est{opacity:.75;font-style:italic}
+</style>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 :root{--bg:#0f1218;--pn:#171b23;--bd:#2a303c;--tx:#e6e9ef;--mu:#8b93a3;--up:#2fbf71;--dn:#e5484d;--am:#f0a73a;--ac:#5b9cff}
@@ -169,7 +177,7 @@ details.dt[open]>summary{color:var(--tx)}
  <div class="chips" id="wchips"></div>
  <div class="tscroll" style="max-height:40vh"><table id="wfeed" class="st"></table></div>
  <div class="tiny" style="margin-top:4px">Green = bullish (calls bought / puts sold), red = bearish. Per-card whale bias and OFI+tape agreement each add ±0.5 to the bias score.</div></section>
-<section id="board"><div class="pn" style="margin-bottom:10px"><h2>Signal board <span class="tiny" id="bmeta"></span></h2>
+<section id="board"><div class="pn" style="margin-bottom:10px"><h2>Signal board <span class="tiny" id="bmeta"></span> <span id="liveclock" title="Board last update (ET)"></span></h2>
  <div id="near"></div>
  <details open><summary class="mu" style="cursor:pointer">Signals today (newest first)</summary><div id="sigs" style="max-height:260px;overflow-y:auto"></div></details></div>
  <div class="bgrid" id="cards"></div><div class="tiny" id="notfed" style="margin-top:6px"></div>
@@ -522,26 +530,47 @@ function renderReady(){const box=$('readyrow'), close=$('closerow'), meta=$('rme
   <span class="${cls(c.dist_pct)}">${pct(c.dist_pct)}</span> · str ${c.strength} · <span class=up>AGREE</span></div>`).join(''):'<div class="tiny mu">None near a level (≤0.3%, AGREE, str≥50)</div>';
  close.querySelectorAll('.gchip[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
 }
+function ageCls(sec, lim){if(sec==null)return 'a';const L=lim||300;if(sec<=L*0.4)return 'g';if(sec<=L)return 'a';return 'r'}
+function ageTxt(sec){if(sec==null)return '—';if(sec<1)return 'now';if(sec<60)return Math.round(sec)+'s';return Math.floor(sec/60)+'m '+Math.round(sec%60)+'s'}
+let WALL_FLASH={};
 function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
  const W=B.wall_signals||[];
- meta.textContent=W.length?`${W.filter(x=>x.has_data&&!x.stale).length}/${W.length} fresh · trading switch ${B.wall_signal_trading?'ON':'OFF'}`:'waiting for Wall Flow data';
- if(!W.length){box.innerHTML='<div class="tiny">waiting for Wall Flow data… Re-run multi.js in the dashboard console after the engine update to start the ~30s Wall Flow feed.</div>';return}
+ const fresh=W.filter(x=>x.has_data&&!x.stale).length;
+ meta.textContent=W.length?`${fresh}/${W.length} fresh · core≤${B.wall_stale_core_s||300}s / rest≤${B.wall_stale_rest_s||600}s · trading ${B.wall_signal_trading?'ON':'OFF'}`:'waiting for Wall Flow data';
+ if(!W.length){box.innerHTML='<div class="tiny">waiting for Wall Flow data… Re-run multi.js in the dashboard console after the engine update to start the Wall Flow feed.</div>';return}
+ // preserve scroll on iPad: remember first visible ticker
+ const prevScroll=box.scrollTop||0;
+ const prevHTML=box.dataset.sig||'';
+ const sig=W.map(w=>w.ticker+':'+(w.state||'')+':'+(w.spot||'')+':'+(w.next_up||'')+':'+(w.next_dn||'')).join('|');
+ // flash on state change
+ W.forEach(w=>{const k=w.ticker, prev=(WALL_FLASH._prev||{})[k]; if(prev&&prev!==w.state){WALL_FLASH[k]=Date.now()+5000} });
+ WALL_FLASH._prev=Object.fromEntries(W.map(w=>[w.ticker,w.state]));
  box.innerHTML=W.map(w=>{
   const stale=w.stale||!w.has_data;
   const distC=w.dist_ceiling_pct==null?'':` (${pct(w.dist_ceiling_pct)})`;
   const distF=w.dist_floor_pct==null?'':` (${pct(w.dist_floor_pct)})`;
   const vote=(lab,v)=>`<span class="tiny">${lab} <b class="${v>0?'up':v<0?'dn':''}">${v>0?'▲':v<0?'▼':'·'}</b></span>`;
-  return `<div class="wc ${stale?'stale':''}" data-tk="${w.ticker}" style="cursor:pointer">
+  const nu=w.next_up==null?'—':(f2(w.next_up)+(w.next_up_est?' <span class=est title="estimated round strike">est</span>':''));
+  const nd=w.next_dn==null?'—':(f2(w.next_dn)+(w.next_dn_est?' <span class=est title="estimated round strike">est</span>':''));
+  const fl=WALL_FLASH[w.ticker]&&WALL_FLASH[w.ticker]>Date.now()?' flash':'';
+  const pa=w.price_age_s, wa=w.walls_age_s!=null?w.walls_age_s:w.age_s;
+  const lim=w.stale_limit_s||(w.wall_core? (B.wall_stale_core_s||300):(B.wall_stale_rest_s||600));
+  return `<div class="wc ${stale?'stale':''}${fl}" data-tk="${w.ticker}" style="cursor:pointer">
    <div class="ch"><span class="tk" style="font-size:16px">${w.ticker}</span>${wallPill(w.state)}
     <span class="bias b-${w.direction||'NEUTRAL'}" style="font-size:11px;padding:1px 6px">${w.direction||'NEUTRAL'} ${w.strength||0}</span>
-    <span class="tiny" style="margin-left:auto">${f2(w.spot)}</span></div>
+    <span class="tiny" style="margin-left:auto"><b>${f2(w.spot)}</b></span></div>
    <div class="ln tiny"><span>ceiling <b>${w.ceiling==null?'—':f2(w.ceiling)}</b>${distC}</span><span>floor <b>${w.floor==null?'—':f2(w.floor)}</b>${distF}</span></div>
-   <div class="ln tiny"><span>next ↑ <b class=up>${w.next_up==null?'—':f2(w.next_up)}</b></span><span>next ↓ <b class=dn>${w.next_dn==null?'—':f2(w.next_dn)}</b></span></div>
-   <div class="ln tiny"><span>${w.agree?`<b class="${w.agree==='AGREE'?'up':'am'}">${esc(w.agree)}</b>`:'<span class=mu>agree n/a</span>'} · ${vote('tape',w.tape_vote)} ${vote('opt',w.options_vote)} ${vote('dirs',w.dirs_vote)}</span>
-    <span class="tiny">${w.age_s!=null?Math.round(w.age_s)+'s ago':''}</span></div>
+   <div class="ln tiny"><span>next ↑ <b class=up>${nu}</b>${w.dist_next_up_pct!=null?` <span class=tiny>(${pct(w.dist_next_up_pct)})</span>`:''}</span>
+    <span>next ↓ <b class=dn>${nd}</b>${w.dist_next_dn_pct!=null?` <span class=tiny>(${pct(w.dist_next_dn_pct)})</span>`:''}</span></div>
+   <div class="ln tiny"><span>${w.agree?`<b class="${w.agree==='AGREE'?'up':'am'}">${esc(w.agree)}</b>`:'<span class=mu>agree n/a</span>'} · ${vote('tape',w.tape_vote)} ${vote('opt',w.options_vote)} ${vote('dirs',w.dirs_vote)}</span></div>
    <div class="ln tiny">${wallVwap(w)}${w.vwap_agree===true?' · <span class=up>VWAP agree</span>':w.vwap_agree===false?' · <span class=dn>VWAP against</span>':''}</div>
+   <div class="ln tiny" style="margin-top:2px"><span class="age ${ageCls(pa,90)}">price ${ageTxt(pa)}</span>
+    <span class="age ${ageCls(wa,lim)}" style="margin-left:8px">walls ${ageTxt(wa)}</span>
+    ${w.wall_core?'<span class="tiny mu" style="margin-left:6px">core</span>':''}</div>
    <div class="tiny" style="margin-top:3px">${esc(w.reason||'')}</div>
   </div>`}).join('');
+ box.dataset.sig=sig;
+ box.scrollTop=prevScroll;
  box.querySelectorAll('.wc[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
 }
 function renderLB(){if(!B)return;
@@ -562,6 +591,8 @@ function banTxt(S_){const m=/^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/.exec(S_.window_e
  if(S_.phase==='late')return `Late session (${TR(b,'16:00')}) — calls less reliable. No new Confirmed calls or entries after ${one(b)}.`;return esc(S_.banner)}
 let _lbBusy=false;async function loadBoard(){if(_lbBusy)return;_lbBusy=true;try{B=await api('/api/board'+(BD?'?date='+encodeURIComponent(BD):''));
  _lastBoard=Date.now();liveTick();const tm=$('trademode');if(tm)tm.textContent='Trading on: '+(B.trade_mode||(B.wall_signal_trading?'Wall & Floor':'A+/structure'))+(B.wall_dynamic_exits?' · dyn exits':'')+(B.wall_vwap_filter?' · VWAP filter':'');$('bmeta').textContent=`${B.date||''} · paper equity ${money(B.equity_now)} · ${B.open_positions} open`;
+ const lc=$('liveclock'); if(lc){const st=B.server_time_et||''; lc.textContent='updated '+st; lc.className=(Date.now()-_lastBoard>30000)?'stale':''; lc.title='Engine board time (ET). Red if this page has not refreshed in 30s.';}
+
  $('clock').innerHTML=srvTime(B.server_time_et);$('infometa').textContent=`Board day ${B.date||'-'} · auto-refresh 2s (minutes 4s) · ${B.cards.length} tickers`;
  $('near').innerHTML=B.near.length?B.near.map(n=>`<div class="near ${n.side==='SHORT'?'s':''}"><b>Setup forming:</b> <b>${n.ticker}</b> <b class="${n.side==='LONG'?'up':'dn'}">${n.side}</b> 4/5 at ${T(n.t)} (${f2(n.spot)}) - missing <b>${esc(n.missing)}</b>${n.stay_out.length?'<div class="tiny">stay-out active: '+n.stay_out.map(esc).join('; ')+'</div>':''}</div>`).join(''):'<div class="tiny">No near-signals (4/5) on fresh tickers right now.</div>';
  const sg=B.signals.filter(x=>x.kind!=='BLOCKED'),bl=B.signals.filter(x=>x.kind==='BLOCKED');
@@ -586,7 +617,9 @@ $('info').addEventListener('click',e=>{if(e.target.id==='info')$('info').classLi
  if(sh==='lb')hide(['board','whsec','pulsesec','alsec','hstrip','flowsec','wallsec','readysec']);
  if(sh==='alerts')hide(['board','lbsec','whsec','pulsesec','hstrip','flowsec','wallsec','readysec']);
  if(sh==='card'){hide(['lbsec','whsec','pulsesec','alsec','hstrip','flowsec','wallsec','readysec']);document.head.insertAdjacentHTML('beforeend','<style>#board>.pn,#notfed,#board>.tiny{display:none}#cards>.card:not(:first-child){display:none}</style>')}}
-loadBoard();setInterval(loadBoard,2000);loadMinutes();setInterval(loadMinutes,4000);
+loadBoard();setInterval(loadBoard,3000);
+setInterval(function(){const lc=$('liveclock'); if(!lc||!_lastBoard)return; const lag=(Date.now()-_lastBoard)/1000; if(lag>30){lc.className='stale'; lc.textContent='STALE ' + Math.round(lag) + 's — check feed';} },1000);
+loadMinutes();setInterval(loadMinutes,4000);
 $('paper').addEventListener('toggle',()=>{if(S){drawChart();drawEq()}});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadBoard()});window.addEventListener("pageshow",()=>loadBoard());window.addEventListener("focus",()=>loadBoard());
 load();setInterval(tick,2500);
 </script></body></html>
