@@ -138,7 +138,7 @@ details.dt[open]>summary{color:var(--tx)}
 <div id="hstrip"></div>
 <section class="pn c12" id="wallsec"><h2>Wall &amp; Floor Signals <span class="tiny" id="wmeta"></span></h2>
  <div id="wallgrid" class="wgrid"><div class="tiny">waiting for Wall Flow data…</div></div>
- <div class="tiny" style="margin-top:4px">Live price vs dealer walls/shelves from the dashboard Wall Flow feed (~30s). <b>BREAKOUT/BREAKDOWN CONFIRMED</b> = held beyond the level ≥15 min with signed vol agreeing. <b>TESTING</b> = within 0.5%. Greyed = wallflow snapshot &gt;2 min stale. Paper entries use these states while <code>wall_signal_trading</code> is on (LONG = breakout up / strong bounce; SHORT = breakdown / strong reject). Old A+/structure path stays in code but does not open new trades.</div></section>
+ <div class="tiny" style="margin-top:4px">Live price vs dealer walls/shelves from the dashboard Wall Flow feed (~30s). <b>BREAKOUT/BREAKDOWN CONFIRMED</b> = held beyond the level ≥15 min with signed vol agreeing. <b>TESTING</b> = within 0.5%. Greyed = wallflow levels snapshot &gt;5 min stale (live price still from optflow). Paper entries use these states while <code>wall_signal_trading</code> is on (LONG = breakout up / strong bounce; SHORT = breakdown / strong reject). Old A+/structure path stays in code but does not open new trades.</div></section>
 <section class="pn c12" id="pulsesec"><h2>Market pulse <span class="tiny" id="pmeta"></span></h2><div id="pulse" class="tiny">loading…</div></section>
 <section class="pn c12" id="lbsec"><h2>Flow leaderboard - <span id="lbsortlab">bullish to bearish by roll10 LEAN</span> (tap a row)</h2>
  <div class="chips" id="lbsort"></div>
