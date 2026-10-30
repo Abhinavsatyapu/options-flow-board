@@ -277,7 +277,8 @@ function render(){
   h+='<div class="mu" style="grid-column:1/4;margin-top:4px">Stay-out filters (green = clear)</div>';
   for(const [k,n] of st)h+=`<div>${n}</div><div>${dot(!L.checks.long[k])}</div><div>${dot(!L.checks.short[k])}</div>`;
   $('checks').innerHTML=h}
- $('pos').innerHTML=op?kv([['Side',`<b class="${op.side==='long'?'up':'dn'}">${op.side.toUpperCase()}</b>`],['Entry',T(op.entry_t,S.date)+' @ '+f2(op.entry)],['Shares (open/total)',n0(op.shares_open)+' / '+n0(op.shares)],['Stop',f2(op.stop)+' (init '+f2(op.init_stop)+', '+op.stop_src+')'],['R / share',f2(op.R)],['T1',f2(op.t1)+(op.t1_done?' ✓ done':'')],['T2',f2(op.t2)+' ('+op.t2_src+')'],['Broken level',f2(op.broken_level)],['Last',f2(op.last_px)],['Unrealised',`<span class="${cls(op.unrealised)}">${money(op.unrealised)}</span>`]]):'<div>-</div><div>flat</div>';
+ const _sm=(op&&op.stop_moves)||[]; const _smLast=_sm.length?_sm[_sm.length-1]:null;
+ $('pos').innerHTML=op?kv([['Side',`<b class="${op.side==='long'?'up':'dn'}">${op.side.toUpperCase()}</b>`+(op.entry_mode==='wall'?' <span class="paper" style="font-size:10px">WALL</span>':'')],['Entry',T(op.entry_t,S.date)+' @ '+f2(op.entry)],['Shares (open/total)',n0(op.shares_open)+' / '+n0(op.shares)],['Stop',f2(op.stop)+' (init '+f2(op.init_stop)+', '+(op.stop_src||'-')+')'],['Target (T2)',f2(op.t2)+' ('+(op.t2_src||'-')+')'],['R / share',f2(op.R)],['T1',f2(op.t1)+(op.t1_done?' ✓ done':'')],['Broken level',f2(op.broken_level)],['Wall state',esc(op.wall_state||'-')],['Last dyn move',_smLast?(esc(_smLast.reason||'')+' @ '+(_smLast.t||'')):'—'],['Last',f2(op.last_px)],['Unrealised',`<span class="${cls(op.unrealised)}">${money(op.unrealised)}</span>`]]):'<div>-</div><div>flat</div>';
  const st=S.stats; $('stats').innerHTML=kv([['Trades',st.trades],['Win rate',st.win_rate==null?'-':st.win_rate+'%'],['Net closed P&L',money(st.net_pnl)],['Max drawdown',money(st.max_drawdown)+' ('+st.max_drawdown_pct.toFixed(2)+'%)']]);
  $('trades').innerHTML='<tr><th class=l>Date</th><th class=l>Ticker</th><th class=l>Side</th><th>Entry</th><th>Entry</th><th>Shares</th><th>Stop</th><th>R</th><th>T1</th><th>T2</th><th class=l>Exits</th><th>Pts/sh</th><th>P&L $</th></tr>'+
   (S.trades.slice().reverse().map(t=>`<tr><td class=l>${t.date}</td><td class=l><b>${t.ticker}</b>${t.legacy?'<br><span class=am style="font-size:11px">'+t.label+'</span>':''}</td><td class="l ${t.side==='long'?'up':'dn'}">${t.side}</td><td>${T(t.entry_t,t.date,1)}</td><td>${f2(t.entry)}</td><td>${n0(t.shares)}</td><td>${f2(t.init_stop)}</td><td>${f2(t.R)}</td><td>${f2(t.t1)}</td><td>${f2(t.t2)}</td><td class=l>${t.legs.map(l=>`${T(l.t,t.date)} ${n0(l.shares)}@${f2(l.price)} - ${l.reason}`).join('<br>')}</td><td class="${cls(t.pts)}">${f2(t.pts)}</td><td class="${cls(t.pnl)}">${money(t.pnl)}</td></tr>`).join('')||'<tr><td class=l colspan=13>No closed trades yet.</td></tr>');
@@ -364,7 +365,7 @@ function card(c){const P=c.position,arrow=c.cum_slope10>0?'▲':c.cum_slope10<0?
  ${vwapBlock(c)}
  <div class="fl"><div><span class="tiny">CUM LEAN</span><b class="${cls(c.cum_lean)}">${n0(c.cum_lean)}</b> <span class="tiny ${cls(c.cum_slope10)}" style="display:inline">${arrow}${n0(c.cum_slope10)}/10m</span></div><div><span class="tiny">roll10</span><b class="${cls(c.roll10)}">${n0(c.roll10)}</b></div><div><span class="tiny">Prem net</span><b class="${cls(c.net_prem)}">${k0(c.net_prem)}</b></div></div>
  ${dup}
- ${P?`<div class="pos"><b class="${P.side==='long'?'up':'dn'}">${P.side.toUpperCase()} OPEN</b> <span class="paper" style="font-size:10px;padding:1px 5px">PAPER</span> since ${T(P.entry_t,D)} @ <b>${f2(P.entry)}</b><br>SL <b>${f2(P.stop)}</b> · T1 ${f2(P.t1)}${P.t1_done?' (hit)':''} · T2 ${f2(P.t2)}<br>Size ${n0(P.shares_open)}/${n0(P.shares)} sh · Unrealised <b class="${cls(P.unrealised)}">${money(P.unrealised)}</b></div>`:''}
+ ${P?`<div class="pos"><b class="${P.side==='long'?'up':'dn'}">${P.side.toUpperCase()} OPEN</b> <span class="paper" style="font-size:10px;padding:1px 5px">PAPER</span>${P.entry_mode==='wall'?' <span class="paper" style="font-size:10px;padding:1px 5px">WALL</span>':''} since ${T(P.entry_t,D)} @ <b>${f2(P.entry)}</b><br>SL <b>${f2(P.stop)}</b>${P.stop_src?` <span class="tiny mu">(${esc(P.stop_src)})</span>`:''} · T1 ${f2(P.t1)}${P.t1_done?' (hit)':''} · T2 <b>${f2(P.t2)}</b>${P.t2_src?` <span class="tiny mu">(${esc(P.t2_src)})</span>`:''}${(P.stop_moves&&P.stop_moves.length)?`<br><span class="tiny mu">dyn: ${esc((P.stop_moves[P.stop_moves.length-1]||{}).reason||'moved')}</span>`:''}<br>Size ${n0(P.shares_open)}/${n0(P.shares)} sh · Unrealised <b class="${cls(P.unrealised)}">${money(P.unrealised)}</b></div>`:''}
  <details class="dt" data-dk="${dk}"${OPEN.has(dk)?' open':''}><summary>Details <span class="tiny">· Long ${c.long_n}/5 · Short ${c.short_n}/5${c.stay_out.length?' · <span class=am>stay out</span>':''}</span></summary>
  <div style="margin-top:4px"><b class=up>Long ${c.long_n}/5</b><div class="dots">${dots(c.long)}</div></div>
  <div style="margin-top:4px"><b class=dn>Short ${c.short_n}/5</b><div class="dots">${dots(c.short)}</div></div>
@@ -490,6 +491,11 @@ function lbConf(x){if(x.confirmed)return cpill({confirmed:1,dir:x.confirm_dir},1
 
 function wallCls(st){return 'ws-'+(st||'WAITING').replace(/\s+/g,'_')}
 function wallPill(st,small){const s=st||'WAITING';return `<span class="ws ${wallCls(s)}" style="${small?'font-size:10px;padding:1px 5px':''}">${esc(s)}</span>`}
+function wallVwap(w){if(!w||w.vwap==null)return `<span class="tiny mu">VWAP n/a</span>`;
+ const side=w.vwap_side||((w.vwap_pct||0)>0?'above':(w.vwap_pct||0)<0?'below':'at');
+ const cls_=side==='above'?'up':side==='below'?'dn':'';
+ const blk=w.vwap_blocked?' <span class="am" style="font-size:10px">blocked</span>':'';
+ return `<span class="tiny">VWAP <b>${f2(w.vwap)}</b> <b class="${cls_}">${side}</b>${w.vwap_pct!=null?` <span class="${cls_}">(${pct(w.vwap_pct)})</span>`:''}${blk}</span>`;}
 function lbWall(x){if(!x.wall_state)return `<span class="tiny mu">—</span>`;return `${wallPill(x.wall_state,1)}${x.wall_strength!=null?`<div class="tiny ${x.wall_dir==='BULLISH'?'up':x.wall_dir==='BEARISH'?'dn':''}">${esc(x.wall_dir||'')} ${x.wall_strength}</div>`:''}`}
 
 function renderReady(){const box=$('readyrow'), close=$('closerow'), meta=$('rmeta'); if(!box||!B)return;
@@ -509,6 +515,7 @@ function renderReady(){const box=$('readyrow'), close=$('closerow'), meta=$('rme
     <span class="tiny" style="margin-left:auto">${r.age_s!=null?Math.round(r.age_s)+'s':''}</span></div>
    <div class="ln tiny"><span>${esc(r.state)}</span><span>str <b>${r.strength||0}</b></span></div>
    <div class="ln"><span>entry <b>${f2(r.entry)}</b></span><span class="dn">stop ${f2(r.stop)}</span><span class="up">tgt ${f2(r.target)}</span></div>
+   <div class="ln tiny">${wallVwap(r)}</div>
   </div>`}).join(''):'<div class="tiny mu">No entries ready</div>';
  box.querySelectorAll('.rchip[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
  close.innerHTML=C.length?C.map(c=>`<div class="gchip" data-tk="${c.ticker}"><b>${c.ticker}</b> · <b class="lv">${esc(c.level)}</b> ${f2(c.level_px)}
@@ -532,6 +539,7 @@ function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
    <div class="ln tiny"><span>next ↑ <b class=up>${w.next_up==null?'—':f2(w.next_up)}</b></span><span>next ↓ <b class=dn>${w.next_dn==null?'—':f2(w.next_dn)}</b></span></div>
    <div class="ln tiny"><span>${w.agree?`<b class="${w.agree==='AGREE'?'up':'am'}">${esc(w.agree)}</b>`:'<span class=mu>agree n/a</span>'} · ${vote('tape',w.tape_vote)} ${vote('opt',w.options_vote)} ${vote('dirs',w.dirs_vote)}</span>
     <span class="tiny">${w.age_s!=null?Math.round(w.age_s)+'s ago':''}</span></div>
+   <div class="ln tiny">${wallVwap(w)}${w.vwap_agree===true?' · <span class=up>VWAP agree</span>':w.vwap_agree===false?' · <span class=dn>VWAP against</span>':''}</div>
    <div class="tiny" style="margin-top:3px">${esc(w.reason||'')}</div>
   </div>`}).join('');
  box.querySelectorAll('.wc[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
@@ -553,7 +561,7 @@ function banTxt(S_){const m=/^(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$/.exec(S_.window_e
  if(S_.phase==='early')return `Early session (${TR('09:30',a)}) — calls less reliable. Confirmed calls and new entries start ${one(a)}.`;
  if(S_.phase==='late')return `Late session (${TR(b,'16:00')}) — calls less reliable. No new Confirmed calls or entries after ${one(b)}.`;return esc(S_.banner)}
 let _lbBusy=false;async function loadBoard(){if(_lbBusy)return;_lbBusy=true;try{B=await api('/api/board'+(BD?'?date='+encodeURIComponent(BD):''));
- _lastBoard=Date.now();liveTick();const tm=$('trademode');if(tm)tm.textContent='Trading on: '+(B.trade_mode||(B.wall_signal_trading?'Wall & Floor':'A+/structure'));$('bmeta').textContent=`${B.date||''} · paper equity ${money(B.equity_now)} · ${B.open_positions} open`;
+ _lastBoard=Date.now();liveTick();const tm=$('trademode');if(tm)tm.textContent='Trading on: '+(B.trade_mode||(B.wall_signal_trading?'Wall & Floor':'A+/structure'))+(B.wall_dynamic_exits?' · dyn exits':'')+(B.wall_vwap_filter?' · VWAP filter':'');$('bmeta').textContent=`${B.date||''} · paper equity ${money(B.equity_now)} · ${B.open_positions} open`;
  $('clock').innerHTML=srvTime(B.server_time_et);$('infometa').textContent=`Board day ${B.date||'-'} · auto-refresh 2s (minutes 4s) · ${B.cards.length} tickers`;
  $('near').innerHTML=B.near.length?B.near.map(n=>`<div class="near ${n.side==='SHORT'?'s':''}"><b>Setup forming:</b> <b>${n.ticker}</b> <b class="${n.side==='LONG'?'up':'dn'}">${n.side}</b> 4/5 at ${T(n.t)} (${f2(n.spot)}) - missing <b>${esc(n.missing)}</b>${n.stay_out.length?'<div class="tiny">stay-out active: '+n.stay_out.map(esc).join('; ')+'</div>':''}</div>`).join(''):'<div class="tiny">No near-signals (4/5) on fresh tickers right now.</div>';
  const sg=B.signals.filter(x=>x.kind!=='BLOCKED'),bl=B.signals.filter(x=>x.kind==='BLOCKED');
