@@ -111,6 +111,18 @@ details.dt[open]>summary{color:var(--tx)}
 #tip{position:fixed;z-index:70;max-width:280px;background:#22304a;border:1px solid var(--ac);border-radius:8px;padding:6px 9px;font-size:12.5px;display:none;box-shadow:0 4px 16px #000a}
 [data-tip]{cursor:help}
 
+
+/* READY NOW / GETTING CLOSE */
+#readysec{grid-column:1/-1}
+#readysec .rrow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.rchip{flex:1 1 160px;max-width:280px;background:#12161d;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;cursor:pointer;min-width:0}
+.rchip.long{border-color:#2f5a3b;background:#14251a}.rchip.short{border-color:#6b2a2e;background:#2a1517}
+.rchip.flash{animation:rfl 0.9s ease-in-out 4}@keyframes rfl{50%{box-shadow:0 0 0 3px var(--am);filter:brightness(1.25)}}
+.rchip .side{font-weight:800;font-size:12px;padding:1px 7px;border-radius:5px}
+.rchip .side.LONG{background:var(--up);color:#000}.rchip .side.SHORT{background:var(--dn);color:#fff}
+.gchip{flex:0 1 auto;background:#12161d;border:1px solid var(--bd);border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12.5px}
+.gchip b.lv{color:var(--am)}
+@media(max-width:600px){.rchip{flex:1 1 100%;max-width:none}}
 /* Wall & Floor signals */
 #wallsec .wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
 .wc{background:#12161d;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;min-width:0}
@@ -136,6 +148,11 @@ details.dt[open]>summary{color:var(--tx)}
 <div id="sbanner"></div>
 <div id="mstrip"></div>
 <div id="hstrip"></div>
+<section class="pn c12" id="readysec"><h2>READY NOW <span class="tiny" id="rmeta"></span></h2>
+ <div id="readyrow" class="rrow"><div class="tiny mu">No entries ready</div></div>
+ <div style="margin-top:8px"><span class="tiny" style="text-transform:uppercase;letter-spacing:.04em;color:var(--mu)">Getting close</span>
+ <div id="closerow" class="rrow" style="margin-top:4px"><div class="tiny mu">None near a level</div></div></div>
+ <div class="tiny" style="margin-top:4px">Actionable Wall &amp; Floor entries (confirmed break / strong bounce or reject) with fresh levels and a live price. Tap a chip to jump to the card. Sound (after Enable sound) plays a distinct READY chime once per ticker+state per 15 min.</div></section>
 <section class="pn c12" id="wallsec"><h2>Wall &amp; Floor Signals <span class="tiny" id="wmeta"></span></h2>
  <div id="wallgrid" class="wgrid"><div class="tiny">waiting for Wall Flow data…</div></div>
  <div class="tiny" style="margin-top:4px">Live price vs dealer walls/shelves from the dashboard Wall Flow feed (~30s). <b>BREAKOUT/BREAKDOWN CONFIRMED</b> = held beyond the level ≥15 min with signed vol agreeing. <b>TESTING</b> = within 0.5%. Greyed = wallflow levels snapshot &gt;5 min stale (live price still from optflow). Paper entries use these states while <code>wall_signal_trading</code> is on (LONG = breakout up / strong bounce; SHORT = breakdown / strong reject). Old A+/structure path stays in code but does not open new trades.</div></section>
@@ -147,7 +164,7 @@ details.dt[open]>summary{color:var(--tx)}
 <section class="pn c12" id="alsec"><h2>Alerts - divergence, unusual flow, direction extremes, VWAP, Wall, signals</h2>
  <div class="row" style="margin:0 0 4px"><button id="snd">🔇 Enable sound</button><button id="aw">☆ Watched only</button><span class="tiny" id="wlist"></span></div>
  <div class="chips" id="atype"></div><div id="alist" style="max-height:48vh;overflow-y:auto"></div>
- <div class="tiny" style="margin-top:4px">Tap ☆ on a card to watch a ticker. New alerts on watched tickers flash the card, show a banner and (after "Enable sound") beep: high tone = bullish, low = bearish. Phones need one tap on the button before sound can play.</div></section>
+ <div class="tiny" style="margin-top:4px">Tap ☆ on a card to watch a ticker. New alerts on watched tickers flash the card, show a banner and (after "Enable sound") beep: high tone = bullish, low = bearish; READY NOW plays a distinct two-note chime. Phones need one tap on the button before sound can play.</div></section>
 <section class="pn c12" id="whsec"><h2>🐳 Whale prints - newest first (single prints ≥ $250k)</h2>
  <div class="chips" id="wchips"></div>
  <div class="tscroll" style="max-height:40vh"><table id="wfeed" class="st"></table></div>
@@ -404,6 +421,12 @@ let WATCH=new Set(JSON.parse(localStorage.getItem('spcx_watch')||'[]')),SOUND=fa
 function saveW(){localStorage.setItem('spcx_watch',JSON.stringify([...WATCH]))}
 function beep(side){if(!SOUND||!AC)return;try{const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=side==='bullish'?880:side==='bearish'?330:600;
  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.35,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.45);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.5)}catch(e){}}
+// Distinct READY NOW chime (two-note square) — not the watched-alert sine beep
+function beepReady(side){if(!SOUND||!AC)return;try{const t0=AC.currentTime,f0=side==='LONG'?740:440,f1=side==='LONG'?1175:554;
+ for(const [i,f] of [[0,f0],[0.16,f1]]){const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;
+  g.gain.setValueAtTime(.0001,t0+i);g.gain.exponentialRampToValueAtTime(.22,t0+i+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+i+.28);
+  o.connect(g);g.connect(AC.destination);o.start(t0+i);o.stop(t0+i+.3)}}catch(e){}}
+let READY_SEEN=null, READY_FLASH={}; // ticker|state -> last beep epoch; chip flash until
 function allAlerts(){const a=(B.alerts||[]).slice();(B.signals||[]).filter(x=>x.kind!=='BLOCKED').forEach(x=>a.push({t:x.t,ticker:x.ticker,type:'signal',kind:x.kind,side:x.side==='long'?(x.kind==='ENTRY'?'bullish':'bearish'):(x.kind==='ENTRY'?'bearish':'bullish'),price:x.price,text:`${x.kind} ${(x.side||'').toUpperCase()} @ ${f2(x.price)}${x.pnl!=null?' · '+money(x.pnl):''}`}));
  (B.near||[]).forEach(n=>a.push({t:n.t,ticker:n.ticker,type:'signal',kind:'near_'+n.side,side:n.side==='LONG'?'bullish':'bearish',price:n.spot,text:`Setup forming ${n.side} 4/5 - missing ${n.missing}`}));
  return a.sort((x,y)=>x.t<y.t?1:x.t>y.t?-1:0)}
@@ -468,6 +491,30 @@ function lbConf(x){if(x.confirmed)return cpill({confirmed:1,dir:x.confirm_dir},1
 function wallCls(st){return 'ws-'+(st||'WAITING').replace(/\s+/g,'_')}
 function wallPill(st,small){const s=st||'WAITING';return `<span class="ws ${wallCls(s)}" style="${small?'font-size:10px;padding:1px 5px':''}">${esc(s)}</span>`}
 function lbWall(x){if(!x.wall_state)return `<span class="tiny mu">—</span>`;return `${wallPill(x.wall_state,1)}${x.wall_strength!=null?`<div class="tiny ${x.wall_dir==='BULLISH'?'up':x.wall_dir==='BEARISH'?'dn':''}">${esc(x.wall_dir||'')} ${x.wall_strength}</div>`:''}`}
+
+function renderReady(){const box=$('readyrow'), close=$('closerow'), meta=$('rmeta'); if(!box||!B)return;
+ const R=B.ready_now||[], C=B.getting_close||[], live=B.live_day&&B.session_open;
+ meta.textContent=R.length?`${R.length} ready · bounce≥${B.wall_bounce_min??55}`:`bounce≥${B.wall_bounce_min??55}`;
+ // sound + flash on newly READY (15-min dedupe client-side mirrors server)
+ const keys=R.map(r=>r.ticker+'|'+r.state);
+ if(READY_SEEN===null){READY_SEEN=new Set(keys)}
+ else{const neu=R.filter(r=>!READY_SEEN.has(r.ticker+'|'+r.state));
+  neu.forEach(r=>{READY_SEEN.add(r.ticker+'|'+r.state); READY_FLASH[r.ticker]=Date.now()+6000; if(live)beepReady(r.side)});
+  // keep set from growing forever: drop keys not seen in 15 min by resetting when empty? keep last 200
+  if(READY_SEEN.size>200){READY_SEEN=new Set(keys)}}
+ box.innerHTML=R.length?R.map(r=>{
+  const fl=READY_FLASH[r.ticker]&&READY_FLASH[r.ticker]>Date.now()?' flash':'';
+  return `<div class="rchip ${r.side==='LONG'?'long':'short'}${fl}" data-tk="${r.ticker}">
+   <div class="ch" style="gap:6px"><b style="font-size:15px">${r.ticker}</b><span class="side ${r.side}">${r.side}</span>
+    <span class="tiny" style="margin-left:auto">${r.age_s!=null?Math.round(r.age_s)+'s':''}</span></div>
+   <div class="ln tiny"><span>${esc(r.state)}</span><span>str <b>${r.strength||0}</b></span></div>
+   <div class="ln"><span>entry <b>${f2(r.entry)}</b></span><span class="dn">stop ${f2(r.stop)}</span><span class="up">tgt ${f2(r.target)}</span></div>
+  </div>`}).join(''):'<div class="tiny mu">No entries ready</div>';
+ box.querySelectorAll('.rchip[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
+ close.innerHTML=C.length?C.map(c=>`<div class="gchip" data-tk="${c.ticker}"><b>${c.ticker}</b> · <b class="lv">${esc(c.level)}</b> ${f2(c.level_px)}
+  <span class="${cls(c.dist_pct)}">${pct(c.dist_pct)}</span> · str ${c.strength} · <span class=up>AGREE</span></div>`).join(''):'<div class="tiny mu">None near a level (≤0.3%, AGREE, str≥50)</div>';
+ close.querySelectorAll('.gchip[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
+}
 function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
  const W=B.wall_signals||[];
  meta.textContent=W.length?`${W.filter(x=>x.has_data&&!x.stale).length}/${W.length} fresh · trading switch ${B.wall_signal_trading?'ON':'OFF'}`:'waiting for Wall Flow data';
@@ -511,7 +558,7 @@ let _lbBusy=false;async function loadBoard(){if(_lbBusy)return;_lbBusy=true;try{
  $('near').innerHTML=B.near.length?B.near.map(n=>`<div class="near ${n.side==='SHORT'?'s':''}"><b>Setup forming:</b> <b>${n.ticker}</b> <b class="${n.side==='LONG'?'up':'dn'}">${n.side}</b> 4/5 at ${T(n.t)} (${f2(n.spot)}) - missing <b>${esc(n.missing)}</b>${n.stay_out.length?'<div class="tiny">stay-out active: '+n.stay_out.map(esc).join('; ')+'</div>':''}</div>`).join(''):'<div class="tiny">No near-signals (4/5) on fresh tickers right now.</div>';
  const sg=B.signals.filter(x=>x.kind!=='BLOCKED'),bl=B.signals.filter(x=>x.kind==='BLOCKED');
  $('sigs').innerHTML=(sg.length?sg.map(sigline).join(''):'<div class="tiny">No entries or exits today yet.</div>')+(bl.length?'<div class="tiny" style="margin-top:6px">Blocked triggers (a break held, but a check or filter failed):</div>'+bl.slice(0,25).map(sigline).join(''):'');
- renderCards();renderMarket();renderLB();renderWall();renderWhales();renderPulse();renderHealth();renderAlerts();renderDS();
+ renderCards();renderMarket();renderLB();renderReady();renderWall();renderWhales();renderPulse();renderHealth();renderAlerts();renderDS();
   for(const [t,u] of Object.entries(FLASH)){if(u>Date.now()){const el=$('cards').querySelector(`.card[data-tk="${t}"]`);if(el)el.classList.add('flash')}}
  $('notfed').textContent=B.not_fed.length?'Not fed today: '+B.not_fed.join(', '):'';
 }catch(e){$('bmeta').textContent='board error: '+e.message}finally{_lbBusy=false}}
@@ -527,10 +574,10 @@ $('cards').addEventListener('click',e=>{const sb=e.target.closest('[data-star]')
 $('infob').onclick=()=>$('info').classList.add('on');$('infox').onclick=()=>$('info').classList.remove('on');
 $('info').addEventListener('click',e=>{if(e.target.id==='info')$('info').classList.remove('on')});document.addEventListener('keydown',e=>{if(e.key==='Escape')$('info').classList.remove('on')});
 {const sh=new URLSearchParams(location.search).get('shot'),hide=ids=>ids.forEach(x=>{const e=document.getElementById(x);if(e)e.style.display='none'});
- if(sh==='flow')hide(['board','lbsec','whsec','pulsesec','alsec','hstrip','wallsec']);
- if(sh==='lb')hide(['board','whsec','pulsesec','alsec','hstrip','flowsec','wallsec']);
- if(sh==='alerts')hide(['board','lbsec','whsec','pulsesec','hstrip','flowsec','wallsec']);
- if(sh==='card'){hide(['lbsec','whsec','pulsesec','alsec','hstrip','flowsec','wallsec']);document.head.insertAdjacentHTML('beforeend','<style>#board>.pn,#notfed,#board>.tiny{display:none}#cards>.card:not(:first-child){display:none}</style>')}}
+ if(sh==='flow')hide(['board','lbsec','whsec','pulsesec','alsec','hstrip','wallsec','readysec']);
+ if(sh==='lb')hide(['board','whsec','pulsesec','alsec','hstrip','flowsec','wallsec','readysec']);
+ if(sh==='alerts')hide(['board','lbsec','whsec','pulsesec','hstrip','flowsec','wallsec','readysec']);
+ if(sh==='card'){hide(['lbsec','whsec','pulsesec','alsec','hstrip','flowsec','wallsec','readysec']);document.head.insertAdjacentHTML('beforeend','<style>#board>.pn,#notfed,#board>.tiny{display:none}#cards>.card:not(:first-child){display:none}</style>')}}
 loadBoard();setInterval(loadBoard,2000);loadMinutes();setInterval(loadMinutes,4000);
 $('paper').addEventListener('toggle',()=>{if(S){drawChart();drawEq()}});document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadBoard()});window.addEventListener("pageshow",()=>loadBoard());window.addEventListener("focus",()=>loadBoard());
 load();setInterval(tick,2500);
