@@ -531,7 +531,7 @@ function renderReady(){const box=$('readyrow'), close=$('closerow'), meta=$('rme
  close.querySelectorAll('.gchip[data-tk]').forEach(el=>el.onclick=()=>pickTicker(el.dataset.tk));
 }
 function ageCls(sec, lim){if(sec==null)return 'a';const L=lim||300;if(sec<=L*0.4)return 'g';if(sec<=L)return 'a';return 'r'}
-function ageTxt(sec){if(sec==null)return '—';if(sec<1)return 'now';if(sec<60)return Math.round(sec)+'s';return Math.floor(sec/60)+'m '+Math.round(sec%60)+'s'}
+function ageTxt(sec){if(sec==null||!isFinite(sec)||sec<0||sec>86400)return '—';if(sec<1)return 'now';if(sec<60)return Math.round(sec)+'s';return Math.floor(sec/60)+'m '+Math.round(sec%60)+'s'}
 let WALL_FLASH={};
 function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
  const W=B.wall_signals||[];
@@ -553,7 +553,8 @@ function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
   const nu=w.next_up==null?'—':(f2(w.next_up)+(w.next_up_est?' <span class=est title="estimated round strike">est</span>':''));
   const nd=w.next_dn==null?'—':(f2(w.next_dn)+(w.next_dn_est?' <span class=est title="estimated round strike">est</span>':''));
   const fl=WALL_FLASH[w.ticker]&&WALL_FLASH[w.ticker]>Date.now()?' flash':'';
-  const pa=w.price_age_s, wa=w.walls_age_s!=null?w.walls_age_s:w.age_s;
+  const pa=w.price_age_s;
+  const wa=(w.has_data && (w.walls_age_s!=null?w.walls_age_s:w.age_s)!=null)?(w.walls_age_s!=null?w.walls_age_s:w.age_s):null;
   const lim=w.stale_limit_s||(w.wall_core? (B.wall_stale_core_s||180):(B.wall_stale_rest_s||180));
   return `<div class="wc ${stale?'stale':''}${fl}" data-tk="${w.ticker}" style="cursor:pointer">
    <div class="ch"><span class="tk" style="font-size:16px">${w.ticker}</span>${wallPill(w.state)}
@@ -565,7 +566,7 @@ function renderWall(){const box=$('wallgrid'),meta=$('wmeta');if(!B)return;
    <div class="ln tiny"><span>${w.agree?`<b class="${w.agree==='AGREE'?'up':'am'}">${esc(w.agree)}</b>`:'<span class=mu>agree n/a</span>'} · ${vote('tape',w.tape_vote)} ${vote('opt',w.options_vote)} ${vote('dirs',w.dirs_vote)}</span></div>
    <div class="ln tiny">${wallVwap(w)}${w.vwap_agree===true?' · <span class=up>VWAP agree</span>':w.vwap_agree===false?' · <span class=dn>VWAP against</span>':''}</div>
    <div class="ln tiny" style="margin-top:2px"><span class="age ${ageCls(pa,90)}">price ${ageTxt(pa)}</span>
-    <span class="age ${ageCls(wa,lim)}" style="margin-left:8px">walls ${ageTxt(wa)}</span>
+    <span class="age ${wa==null?'a':ageCls(wa,lim)}" style="margin-left:8px">${wa==null?'walls waiting':('walls '+ageTxt(wa))}</span>
     ${w.wall_core?'<span class="tiny mu" style="margin-left:6px">core</span>':''}</div>
    <div class="tiny" style="margin-top:3px">${esc(w.reason||'')}</div>
   </div>`}).join('');
